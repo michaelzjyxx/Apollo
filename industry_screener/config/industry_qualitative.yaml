@@ -1,0 +1,375 @@
+# 行业定性评分预设库
+# 基于行业特性的定性评分,可定期(如半年)人工审核更新
+
+industries:
+  - code: '801010.SI'
+    name: '农林牧渔'
+    policy_score: 4
+    policy_reason: '乡村振兴战略支持,种业国产替代受重视,但整体政策力度中等'
+    business_model_score: 3
+    business_model_reason: '养殖业规模效应明显,但受周期波动影响大,现金流一般'
+    barrier_score: 2
+    barrier_reason: '进入门槛较低,竞争激烈,资本壁垒和技术壁垒不高'
+    moat_score: 2
+    moat_reason: '品牌壁垒弱,资源壁垒(土地/水域)有一定作用,但可复制性强'
+    last_review: '2026-01-01'
+
+  - code: '801020.SI'
+    name: '采掘'
+    policy_score: 3
+    policy_reason: '能源安全战略支持,但双碳政策下受限'
+    business_model_score: 2
+    business_model_reason: '重资产,强周期,盈利波动大'
+    barrier_score: 5
+    barrier_reason: '资源壁垒极高,牌照管制严格,资本密集'
+    moat_score: 4
+    moat_reason: '资源型护城河深厚,但技术替代风险存在'
+    last_review: '2026-01-01'
+
+  - code: '801030.SI'
+    name: '化工'
+    policy_score: 3
+    policy_reason: '双碳政策下产能受限,新材料方向受支持,政策中性偏谨慎'
+    business_model_score: 3
+    business_model_reason: '重资产,周期性强,细分领域差异大,龙头现金流稳定'
+    barrier_score: 4
+    barrier_reason: '资本密集,技术壁垒高,环保审批严格'
+    moat_score: 3
+    moat_reason: '龙头具备成本和规模优势,但技术迭代快'
+    last_review: '2026-01-01'
+
+  - code: '801040.SI'
+    name: '钢铁'
+    policy_score: 2
+    policy_reason: '去产能政策持续,环保限产,政策偏紧'
+    business_model_score: 2
+    business_model_reason: '重资产,强周期,同质化严重'
+    barrier_score: 3
+    barrier_reason: '规模壁垒和环保壁垒,但技术壁垒低'
+    moat_score: 2
+    moat_reason: '龙头规模优势,但护城河较浅'
+    last_review: '2026-01-01'
+
+  - code: '801050.SI'
+    name: '有色金属'
+    policy_score: 4
+    policy_reason: '新能源产业链支持(锂、钴、镍),战略金属受重视'
+    business_model_score: 3
+    business_model_reason: '资源型企业,周期波动大,新能源方向成长性强'
+    barrier_score: 4
+    barrier_reason: '资源壁垒高,冶炼技术壁垒中等'
+    moat_score: 3
+    moat_reason: '资源型护城河,但价格波动风险大'
+    last_review: '2026-01-01'
+
+  - code: '801080.SI'
+    name: '电子'
+    policy_score: 5
+    policy_reason: '半导体国产替代战略支持,集成电路、新型显示受重视'
+    business_model_score: 4
+    business_model_reason: '轻资产,技术驱动,规模效应显著,但竞争激烈'
+    barrier_score: 4
+    barrier_reason: '技术壁垒高,研发投入大,但产能扩张快'
+    moat_score: 3
+    moat_reason: '技术护城河和生态壁垒,但迭代快'
+    last_review: '2026-01-01'
+
+  - code: '801110.SI'
+    name: '家用电器'
+    policy_score: 3
+    policy_reason: '以旧换新政策支持,但整体政策力度中等'
+    business_model_score: 4
+    business_model_reason: '龙头现金流稳定,品牌溢价明显,渠道优势强'
+    barrier_score: 3
+    barrier_reason: '品牌和渠道壁垒,但技术壁垒不高'
+    moat_score: 4
+    moat_reason: '龙头品牌护城河深厚,规模效应明显'
+    last_review: '2026-01-01'
+
+  - code: '801120.SI'
+    name: '食品饮料'
+    policy_score: 3
+    policy_reason: '消费升级支持,但监管趋严(食品安全)'
+    business_model_score: 5
+    business_model_reason: '高频复购,品牌溢价极高,现金流优秀'
+    barrier_score: 4
+    barrier_reason: '品牌壁垒高,渠道壁垒强,部分细分有资源壁垒(如茅台)'
+    moat_score: 5
+    moat_reason: '品牌护城河深厚,消费心智难以改变,定价权强'
+    last_review: '2026-01-01'
+
+  - code: '801130.SI'
+    name: '纺织服装'
+    policy_score: 2
+    policy_reason: '政策支持力度低,环保压力大'
+    business_model_score: 2
+    business_model_reason: '低毛利,库存风险高,品牌分化明显'
+    barrier_score: 2
+    barrier_reason: '进入门槛低,竞争激烈'
+    moat_score: 2
+    moat_reason: '除少数品牌外,护城河浅'
+    last_review: '2026-01-01'
+
+  - code: '801140.SI'
+    name: '轻工制造'
+    policy_score: 3
+    policy_reason: '细分领域差异大,部分受消费升级支持'
+    business_model_score: 3
+    business_model_reason: '家居龙头现金流稳定,造纸周期性强'
+    barrier_score: 3
+    barrier_reason: '品牌和渠道壁垒中等'
+    moat_score: 3
+    moat_reason: '龙头渠道优势明显'
+    last_review: '2026-01-01'
+
+  - code: '801150.SI'
+    name: '医药生物'
+    policy_score: 4
+    policy_reason: '创新药、医疗器械受支持,但集采压力大'
+    business_model_score: 4
+    business_model_reason: '刚需属性强,研发驱动,但回报周期长'
+    barrier_score: 5
+    barrier_reason: '技术壁垒极高,专利保护,审批严格'
+    moat_score: 4
+    moat_reason: '技术护城河和专利保护,但集采影响定价权'
+    last_review: '2026-01-01'
+
+  - code: '801160.SI'
+    name: '公用事业'
+    policy_score: 3
+    policy_reason: '清洁能源转型支持,但电价受管制'
+    business_model_score: 3
+    business_model_reason: '现金流稳定,但成长性弱,受政策定价'
+    barrier_score: 5
+    barrier_reason: '特许经营壁垒,资本壁垒高'
+    moat_score: 4
+    moat_reason: '区域垄断护城河,但受政策监管'
+    last_review: '2026-01-01'
+
+  - code: '801170.SI'
+    name: '交通运输'
+    policy_score: 3
+    policy_reason: '物流基础设施支持,但竞争激烈'
+    business_model_score: 3
+    business_model_reason: '重资产,周期性强,快递龙头现金流好'
+    barrier_score: 3
+    barrier_reason: '规模壁垒和网络壁垒'
+    moat_score: 3
+    moat_reason: '龙头网络效应明显'
+    last_review: '2026-01-01'
+
+  - code: '801180.SI'
+    name: '房地产'
+    policy_score: 2
+    policy_reason: '政策调控压力大,融资受限'
+    business_model_score: 2
+    business_model_reason: '高杠杆,现金流压力大,周期性极强'
+    barrier_score: 2
+    barrier_reason: '资金壁垒,但品牌壁垒弱'
+    moat_score: 2
+    moat_reason: '护城河浅,行业下行周期'
+    last_review: '2026-01-01'
+
+  - code: '801200.SI'
+    name: '商业贸易'
+    policy_score: 3
+    policy_reason: '消费复苏支持,但竞争激烈'
+    business_model_score: 2
+    business_model_reason: '低毛利,现金流压力大,线上冲击大'
+    barrier_score: 2
+    barrier_reason: '规模和渠道壁垒中等'
+    moat_score: 2
+    moat_reason: '护城河较浅,除头部企业'
+    last_review: '2026-01-01'
+
+  - code: '801210.SI'
+    name: '休闲服务'
+    policy_score: 3
+    policy_reason: '消费复苏支持,旅游餐饮恢复'
+    business_model_score: 3
+    business_model_reason: '现金流好,但周期波动大'
+    barrier_score: 2
+    barrier_reason: '品牌壁垒中等,复制性强'
+    moat_score: 2
+    moat_reason: '护城河较浅'
+    last_review: '2026-01-01'
+
+  - code: '801230.SI'
+    name: '综合'
+    policy_score: 3
+    policy_reason: '多元化,政策影响中性'
+    business_model_score: 3
+    business_model_reason: '多元化经营,评估困难'
+    barrier_score: 3
+    barrier_reason: '因企业而异'
+    moat_score: 3
+    moat_reason: '因企业而异'
+    last_review: '2026-01-01'
+
+  - code: '801710.SI'
+    name: '建筑材料'
+    policy_score: 2
+    policy_reason: '地产下行压力,基建支持力度中等'
+    business_model_score: 3
+    business_model_reason: '水泥龙头现金流稳定,但成长性弱'
+    barrier_score: 3
+    barrier_reason: '区域壁垒和规模壁垒'
+    moat_score: 3
+    moat_reason: '区域龙头护城河稳固'
+    last_review: '2026-01-01'
+
+  - code: '801720.SI'
+    name: '建筑装饰'
+    policy_score: 3
+    policy_reason: '基建投资支持,但地产下行影响'
+    business_model_score: 2
+    business_model_reason: '垫资压力大,现金流差'
+    barrier_score: 2
+    barrier_reason: '资质壁垒,但竞争激烈'
+    moat_score: 2
+    moat_reason: '护城河较浅'
+    last_review: '2026-01-01'
+
+  - code: '801730.SI'
+    name: '电气设备'
+    policy_score: 5
+    policy_reason: '新能源战略核心,光伏、风电、储能受重视'
+    business_model_score: 4
+    business_model_reason: '成长性强,但竞争激烈,盈利波动大'
+    barrier_score: 4
+    barrier_reason: '技术壁垒和规模壁垒'
+    moat_score: 3
+    moat_reason: '技术护城河,但迭代快'
+    last_review: '2026-01-01'
+
+  - code: '801740.SI'
+    name: '国防军工'
+    policy_score: 5
+    policy_reason: '国防安全战略支持,订单稳定'
+    business_model_score: 3
+    business_model_reason: '订单驱动,现金流稳定,但增长受限'
+    barrier_score: 5
+    barrier_reason: '牌照壁垒极高,技术壁垒高'
+    moat_score: 4
+    moat_reason: '政策护城河和技术护城河'
+    last_review: '2026-01-01'
+
+  - code: '801750.SI'
+    name: '计算机'
+    policy_score: 5
+    policy_reason: '数字经济、自主可控战略支持'
+    business_model_score: 4
+    business_model_reason: '轻资产,SaaS模式现金流好,但竞争激烈'
+    barrier_score: 3
+    barrier_reason: '技术壁垒和生态壁垒'
+    moat_score: 3
+    moat_reason: '技术护城河和客户粘性'
+    last_review: '2026-01-01'
+
+  - code: '801760.SI'
+    name: '传媒'
+    policy_score: 2
+    policy_reason: '监管趋严,政策不确定性大'
+    business_model_score: 3
+    business_model_reason: '轻资产,但盈利不稳定'
+    barrier_score: 2
+    barrier_reason: '内容壁垒和牌照壁垒'
+    moat_score: 2
+    moat_reason: '护城河较浅,内容为王但可复制'
+    last_review: '2026-01-01'
+
+  - code: '801770.SI'
+    name: '通信'
+    policy_score: 4
+    policy_reason: '5G、6G战略支持,数字基础设施'
+    business_model_score: 3
+    business_model_reason: '运营商现金流稳定,设备商周期波动'
+    barrier_score: 4
+    barrier_reason: '技术壁垒和牌照壁垒'
+    moat_score: 3
+    moat_reason: '技术护城河和网络效应'
+    last_review: '2026-01-01'
+
+  - code: '801780.SI'
+    name: '银行'
+    policy_score: 3
+    policy_reason: '金融稳定政策,但监管趋严'
+    business_model_score: 4
+    business_model_reason: '稳定息差,现金流稳定,但资产质量波动'
+    barrier_score: 5
+    barrier_reason: '牌照壁垒极高,资本壁垒高'
+    moat_score: 4
+    moat_reason: '牌照护城河和客户粘性'
+    last_review: '2026-01-01'
+
+  - code: '801790.SI'
+    name: '非银金融'
+    policy_score: 3
+    policy_reason: '资本市场改革支持,但监管加强'
+    business_model_score: 4
+    business_model_reason: '轻资产,杠杆驱动,现金流好'
+    barrier_score: 5
+    barrier_reason: '牌照壁垒极高'
+    moat_score: 4
+    moat_reason: '牌照护城河和品牌优势'
+    last_review: '2026-01-01'
+
+  - code: '801880.SI'
+    name: '汽车'
+    policy_score: 5
+    policy_reason: '新能源汽车战略支持,智能网联汽车'
+    business_model_score: 3
+    business_model_reason: '重资产,周期性强,新能源方向成长性强'
+    barrier_score: 4
+    barrier_reason: '技术壁垒和规模壁垒'
+    moat_score: 3
+    moat_reason: '品牌和技术护城河,但竞争激烈'
+    last_review: '2026-01-01'
+
+  - code: '801890.SI'
+    name: '机械设备'
+    policy_score: 4
+    policy_reason: '高端装备制造支持,工业母机国产化'
+    business_model_score: 3
+    business_model_reason: '重资产,周期性强,细分龙头稳定'
+    barrier_score: 3
+    barrier_reason: '技术壁垒和客户壁垒'
+    moat_score: 3
+    moat_reason: '细分龙头护城河稳固'
+    last_review: '2026-01-01'
+
+  - code: '801950.SI'
+    name: '煤炭'
+    policy_score: 2
+    policy_reason: '能源安全支持,但双碳政策下长期受限'
+    business_model_score: 2
+    business_model_reason: '强周期,盈利波动极大'
+    barrier_score: 5
+    barrier_reason: '资源壁垒极高,牌照管制'
+    moat_score: 4
+    moat_reason: '资源型护城河深厚'
+    last_review: '2026-01-01'
+
+  - code: '801960.SI'
+    name: '石油石化'
+    policy_score: 3
+    policy_reason: '能源安全战略,但转型压力大'
+    business_model_score: 3
+    business_model_reason: '强周期,现金流稳定,但成长性弱'
+    barrier_score: 5
+    barrier_reason: '资源壁垒和牌照壁垒极高'
+    moat_score: 4
+    moat_reason: '资源和品牌护城河'
+    last_review: '2026-01-01'
+
+  - code: '801970.SI'
+    name: '环保'
+    policy_score: 4
+    policy_reason: '双碳战略支持,环保要求趋严'
+    business_model_score: 3
+    business_model_reason: '项目驱动,现金流压力大'
+    barrier_score: 3
+    barrier_reason: '技术壁垒和资质壁垒'
+    moat_score: 3
+    moat_reason: '技术护城河和客户粘性'
+    last_review: '2026-01-01'

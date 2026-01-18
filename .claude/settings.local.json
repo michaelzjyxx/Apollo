@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(echo:*)",
+      "Bash(python -m py_compile:*)",
+      "Bash(python -c:*)",
+      "Bash(pip install:*)",
+      "Bash(python main.py:*)",
+      "Bash(python:*)",
+      "Bash(xargs python:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

@@ -1,0 +1,304 @@
+# 评分权重配置文件
+# 所有权重和阈值均可调整,便于策略优化
+
+# ========== 总分配置 ==========
+total_score: 100
+
+# ========== 竞争格局 (15分) ==========
+competition:
+  total_weight: 15
+
+  cr5:
+    weight: 5
+    rules:
+      - {min: 60, max: null, score: 5, desc: '高度集中'}
+      - {min: 40, max: 60, score: 4, desc: '较为集中'}
+      - {min: 20, max: 40, score: 2, desc: '适度集中'}
+      - {min: null, max: 20, score: 0, desc: '高度分散'}
+
+  leader_share_change:
+    weight: 5
+    unit: 'pct_per_year'  # 百分点/年
+    rules:
+      - {min: 0.5, max: null, score: 5, desc: '持续提升'}
+      - {min: -0.3, max: 0.5, score: 3, desc: '基本稳定'}
+      - {min: -0.5, max: -0.3, score: 1, desc: '小幅下降'}
+      - {min: null, max: -0.5, score: 0, desc: '持续下降'}
+
+  price_volatility:
+    weight: 3
+    unit: 'percent'  # 百分比
+    rules:
+      - {min: null, max: 10, score: 3, desc: '价格稳定'}
+      - {min: 10, max: 20, score: 2, desc: '适度波动'}
+      - {min: 20, max: null, score: 0, desc: '剧烈波动'}
+
+  capacity_utilization:
+    weight: 2
+    unit: 'percent'
+    rules:
+      - {min: 85, max: null, score: 2, desc: '供需偏紧'}
+      - {min: 70, max: 85, score: 1, desc: '供需平衡'}
+      - {min: null, max: 70, score: 0, desc: '产能过剩'}
+
+# ========== 盈利能力 (15分) ==========
+profitability:
+  total_weight: 15
+
+  roe_level:
+    weight: 8
+    rules:
+      - {condition: 'above_market_median and above_hist_50pct', score: 8, desc: '优秀水平'}
+      - {condition: 'above_market_median or above_hist_50pct', score: 4, desc: '良好水平'}
+      - {condition: 'else', score: 0, desc: '一般水平'}
+    market_median_ref: 8  # 全A市场ROE中位数参考值
+
+  roe_trend:
+    weight: 3
+    rules:
+      - {condition: 'improving', score: 3, desc: '环比改善'}
+      - {condition: 'stable', score: 2, desc: '基本平稳'}
+      - {condition: 'declining', score: 0, desc: '环比下行'}
+    trend_threshold: 0.5  # ROE变化±0.5pct视为平稳
+
+  gross_margin_level:
+    weight: 2
+    rules:
+      - {condition: 'above_5y_avg', score: 2, desc: '高于5年均值'}
+      - {condition: 'else', score: 0, desc: '低于5年均值'}
+
+  gross_margin_trend:
+    weight: 2
+    rules:
+      - {condition: 'rising', score: 2, desc: '趋势上行'}
+      - {condition: 'stable', score: 1, desc: '基本平稳'}
+      - {condition: 'falling', score: 0, desc: '趋势下行'}
+    trend_threshold: 1  # 毛利率变化±1pct视为平稳
+
+# ========== 成长性 (10分) ==========
+growth:
+  total_weight: 10
+  gdp_growth_rate: 5  # GDP增速基准,可动态调整
+
+  revenue_growth:
+    weight: 5
+    rules:
+      - {condition: '> gdp + 3', score: 5, desc: '高增长'}
+      - {condition: '> gdp', score: 3, desc: '稳健增长'}
+      - {condition: '> 0', score: 1, desc: '正增长'}
+      - {condition: '<= 0', score: 0, desc: '负增长'}
+
+  profit_growth:
+    weight: 3
+    rules:
+      - {condition: '> revenue_growth', score: 3, desc: '利润增速超收入'}
+      - {condition: 'approximately_equal', score: 2, desc: '利润与收入同步'}
+      - {condition: '< revenue_growth', score: 0, desc: '利润增速滞后'}
+    sync_threshold: 5  # 利润增速与收入增速相差±5pct视为同步
+
+  profit_elasticity:
+    weight: 2
+    formula: 'profit_growth / revenue_growth'
+    rules:
+      - {min: 1.2, max: null, score: 2, desc: '高弹性'}
+      - {min: 0.8, max: 1.2, score: 1, desc: '正常弹性'}
+      - {min: null, max: 0.8, score: 0, desc: '低弹性'}
+
+# ========== 现金流 (10分) ==========
+cashflow:
+  total_weight: 10
+
+  ocf_ni_ratio:
+    weight: 6
+    unit: 'percent'
+    rules:
+      - {min: 100, max: null, score: 6, desc: '现金流优于利润'}
+      - {min: 80, max: 100, score: 4, desc: '现金流健康'}
+      - {min: 50, max: 80, score: 2, desc: '现金流一般'}
+      - {min: null, max: 50, score: 0, desc: '现金流质量差'}
+
+  capex_intensity:
+    weight: 4
+    formula: 'capex / depreciation'
+    rules:
+      - {min: 1, max: 2, score: 4, desc: '合理扩张'}
+      - {min: 0.8, max: 1, score: 2, desc: '维持性投资(低)'}
+      - {min: 2, max: 3, score: 2, desc: '快速扩张(需警惕)'}
+      - {min: 3, max: null, score: 0, desc: '激进扩张'}
+      - {min: null, max: 0.8, score: 1, desc: '产能收缩'}
+
+# ========== 估值 (10分) ==========
+valuation:
+  total_weight: 10
+
+  pe_percentile:
+    weight: 4
+    unit: 'percentile'
+    lookback_period: '5Y'
+    rules:
+      - {min: null, max: 30, score: 4, desc: '低估区域'}
+      - {min: 30, max: 50, score: 3, desc: '合理区域'}
+      - {min: 50, max: 70, score: 1, desc: '略贵区域'}
+      - {min: 70, max: null, score: 0, desc: '高估区域'}
+
+  pb_percentile:
+    weight: 3
+    unit: 'percentile'
+    lookback_period: '5Y'
+    rules:
+      - {min: null, max: 30, score: 3, desc: '低估区域'}
+      - {min: 30, max: 50, score: 2, desc: '合理区域'}
+      - {min: 50, max: 70, score: 1, desc: '略贵区域'}
+      - {min: 70, max: null, score: 0, desc: '高估区域'}
+
+  peg:
+    weight: 3
+    formula: 'pe / profit_growth_forecast'
+    rules:
+      - {min: null, max: 1, score: 3, desc: '低估'}
+      - {min: 1, max: 1.5, score: 2, desc: '合理'}
+      - {min: 1.5, max: 2, score: 1, desc: '略贵'}
+      - {min: 2, max: null, score: 0, desc: '高估'}
+    note: 'PEG不适用于负增长企业'
+
+# ========== 景气度 (5分) ==========
+sentiment:
+  total_weight: 5
+
+  pmi_new_order:
+    weight: 2
+    rules:
+      - {condition: 'pmi > 50 and new_order > 51', score: 2, desc: '景气扩张'}
+      - {condition: 'pmi > 50 or new_order > 51', score: 1, desc: '景气平稳'}
+      - {condition: 'else', score: 0, desc: '景气收缩'}
+
+  m2_social_financing:
+    weight: 1.5
+    unit: 'percent'
+    rules:
+      - {min: 10, max: null, score: 1.5, desc: '流动性宽松'}
+      - {min: 8, max: 10, score: 1, desc: '流动性适度'}
+      - {min: null, max: 8, score: 0, desc: '流动性收紧'}
+
+  ppi_cpi:
+    weight: 1.5
+    rules:
+      # 周期行业看PPI
+      - {condition: 'cyclical and ppi > 5', score: 1.5, desc: '周期:价格强势'}
+      - {condition: 'cyclical and ppi between -2 and 2', score: 1, desc: '周期:价格平稳'}
+      - {condition: 'cyclical and ppi < -2', score: 0, desc: '周期:通缩风险'}
+      # 消费行业看CPI
+      - {condition: 'consumer and cpi between 2 and 3', score: 1.5, desc: '消费:温和通胀'}
+      - {condition: 'consumer and cpi > 3', score: 0.5, desc: '消费:通胀压力'}
+      - {condition: 'consumer and cpi < 1', score: 0, desc: '消费:需求疲软'}
+    industry_types:
+      cyclical: ['采掘', '化工', '钢铁', '有色金属', '煤炭', '石油石化', '建筑材料']
+      consumer: ['食品饮料', '纺织服装', '轻工制造', '医药生物', '商业贸易', '休闲服务', '家用电器']
+
+# ========== 周期位置 (5分) ==========
+cycle:
+  total_weight: 5
+
+  inventory_cycle:
+    weight: 3
+    rules:
+      - {position: 'passive_restocking', score: 3, desc: '被动补库存(景气上行)'}
+      - {position: 'active_destocking', score: 2, desc: '主动去库存(景气底部)'}
+      - {position: 'transition', score: 1, desc: '过渡期'}
+      - {position: 'active_restocking', score: 0.5, desc: '主动补库存(景气高位)'}
+      - {position: 'passive_destocking', score: 0, desc: '被动去库存(景气下行)'}
+    thresholds:
+      inventory_yoy:
+        rising: 5
+        falling: -5
+      revenue_yoy:
+        high: 10
+        low: -5
+
+  inventory_turnover:
+    weight: 2
+    rules:
+      - {condition: 'days_declining', score: 2, desc: '去库顺畅'}
+      - {condition: 'days_rising < 10%', score: 1, desc: '正常波动'}
+      - {condition: 'days_rising between 10% and 20%', score: 0.5, desc: '库存积压'}
+      - {condition: 'days_rising > 20%', score: 0, desc: '严重积压'}
+
+# ========== 定性评分 (20分) ==========
+qualitative:
+  total_weight: 20
+
+  policy:
+    weight: 5
+    rules:
+      - {score: 5, desc: '国家战略、政策强力支持、有补贴'}
+      - {score: 3, desc: '政策中性、无明确限制或扶持'}
+      - {score: 1, desc: '政策限制、整顿、监管趋严'}
+
+  business_model:
+    weight: 5
+    rules:
+      - {score: 5, desc: 'SaaS订阅、品牌消费品、平台型'}
+      - {score: 3, desc: '制造业、To B服务'}
+      - {score: 1, desc: '工程承包、贸易流通'}
+
+  barrier:
+    weight: 5
+    rules:
+      - {score: 5, desc: '3项以上壁垒,极难复制'}
+      - {score: 3, desc: '1-2项壁垒,有一定门槛'}
+      - {score: 1, desc: '无明显壁垒,容易进入'}
+
+  moat:
+    weight: 5
+    rules:
+      - {score: 5, desc: '2种以上护城河,10年内难以攻破'}
+      - {score: 3, desc: '1种护城河,5年内可维持'}
+      - {score: 1, desc: '无明显护城河,随时可能被颠覆'}
+
+# ========== 红线扣分 (每条-10分,最多-10分) ==========
+redline:
+  max_penalty: -10
+
+  gross_margin_decline:
+    enabled: true
+    penalty: -10
+    conditions:
+      consecutive_quarters: 4
+      total_decline_pct: 5
+    description: '毛利率连续4季度下滑>5pct'
+
+  revenue_decline:
+    enabled: true
+    penalty: -10
+    conditions:
+      consecutive_quarters: 2
+      decline_pct: 20
+    description: '收入连续2季度下滑>20%'
+
+  valuation_extreme:
+    enabled: true
+    penalty: -10
+    conditions:
+      percentile: 95
+      duration_days: 30
+    description: 'PE或PB历史95%分位以上维持1月'
+
+  fund_outflow:
+    enabled: true
+    penalty: -10
+    conditions:
+      consecutive_weeks: 8
+      total_outflow: 10000  # 百万元
+    description: '北向+主力资金连续8周流出>100亿'
+
+# ========== 宏观调整 (±5分,可选) ==========
+macro_adjustment:
+  enabled: false  # 是否启用宏观调整
+  max_adjustment: 5
+  min_adjustment: -5
+
+  rules:
+    - {condition: 'bull_market', adjustment: 3, desc: '牛市环境'}
+    - {condition: 'bear_market', adjustment: -3, desc: '熊市环境'}
+    - {condition: 'policy_tailwind', adjustment: 2, desc: '政策利好'}
+    - {condition: 'policy_headwind', adjustment: -2, desc: '政策利空'}
