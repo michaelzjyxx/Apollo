@@ -16,6 +16,9 @@ database:
 ifind_api:
   username: ${IFIND_USERNAME:}
   password: ${IFIND_PASSWORD:}
+  mode: ${IFIND_MODE:sdk}  # sdk 或 http
+  refresh_token: ${IFIND_REFRESH_TOKEN:}  # HTTP模式必需
+  http_base_url: ${IFIND_HTTP_BASE_URL:https://quantapi.51ifind.com/api/v1}
   max_retries: 3
   retry_interval: 5  # 秒
   rate_limit: 1      # 每秒最多请求次数
