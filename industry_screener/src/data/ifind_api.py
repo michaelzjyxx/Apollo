@@ -8,7 +8,7 @@ iFinD API 客户端
 
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import pandas as pd
 from loguru import logger
@@ -159,6 +159,48 @@ class IFindAPIClient:
             f"API 请求失败,已重试 {self.max_retries} 次: {last_exception}"
         )
 
+    def _batch_request(
+        self, 
+        codes: List[str], 
+        fetch_func: Callable[[List[str]], pd.DataFrame], 
+        chunk_size: int = 100
+    ) -> pd.DataFrame:
+        """
+        批量请求辅助方法
+        
+        Args:
+            codes: 代码列表
+            fetch_func: 执行单个批次获取的函数
+            chunk_size: 每批次大小
+            
+        Returns:
+            合并后的DataFrame
+        """
+        if not codes:
+            return pd.DataFrame()
+            
+        results = []
+        total_chunks = (len(codes) + chunk_size - 1) // chunk_size
+        
+        for i in range(0, len(codes), chunk_size):
+            chunk = codes[i:i + chunk_size]
+            try:
+                # logger.debug(f"正在获取第 {i//chunk_size + 1}/{total_chunks} 批次数据 ({len(chunk)} 条)...")
+                df = fetch_func(chunk)
+                if not df.empty:
+                    results.append(df)
+                
+                # 避免触发频率限制
+                self._rate_limit_check()
+                
+            except Exception as e:
+                logger.error(f"批次请求失败 (chunk {i//chunk_size + 1}): {e}")
+                
+        if not results:
+            return pd.DataFrame()
+            
+        return pd.concat(results, ignore_index=True)
+
     def get_industry_data(
         self,
         industry_code: str,
@@ -253,16 +295,17 @@ class IFindAPIClient:
         if isinstance(stock_codes, str):
             stock_codes = [stock_codes]
 
-        def _fetch():
+        # 使用批量请求方法
+        def _fetch_chunk(chunk_codes: List[str]) -> pd.DataFrame:
             # TODO: 实际实现
             logger.warning(
                 f"iFinD API 实际实现待完成 - "
-                f"stock_codes={stock_codes}, "
+                f"stock_codes={chunk_codes[:3]}..., "
                 f"indicator={indicator}"
             )
             return pd.DataFrame()
 
-        return self._retry_request(_fetch)
+        return self._batch_request(stock_codes, _fetch_chunk)
 
     def get_macro_data(
         self,
@@ -289,6 +332,333 @@ class IFindAPIClient:
             return pd.DataFrame(columns=["date", "value"])
 
         return self._retry_request(_fetch)
+
+    # ========== 股票数据获取方法 ==========
+
+    def get_stock_basic_info(
+        self,
+        stock_codes: Union[str, List[str]],
+        date: Optional[datetime] = None,
+    ) -> pd.DataFrame:
+        """
+        获取股票基础信息
+
+        Args:
+            stock_codes: 股票代码或代码列表
+            date: 查询日期，为 None 则使用最新
+
+        Returns:
+            DataFrame, 列: [stock_code, stock_name, industry_code, industry_name,
+                          list_date, is_st]
+        """
+        self._check_connection()
+
+        if isinstance(stock_codes, str):
+            stock_codes = [stock_codes]
+
+        def _fetch_chunk(chunk_codes: List[str]) -> pd.DataFrame:
+            # TODO: 实际实现需要调用 iFinD API
+            # 示例:
+            # indicators = (
+            #     "ths_stock_short_name_stock;"
+            #     "ths_industry_shenwan_l2_stock;"
+            #     "ths_industry_shenwan_l2_name_stock;"
+            #     "ths_ipo_date_stock;"
+            #     "ths_stock_status"
+            # )
+            # result = THS_BD(
+            #     thscode=';'.join(chunk_codes),
+            #     jsonIndicator=indicators,
+            #     jsonparam='',
+            #     begintime=date.strftime('%Y-%m-%d') if date else ''
+            # )
+            
+            logger.warning(
+                f"iFinD API 实际实现待完成 - stock_codes={chunk_codes[:3]}..."
+            )
+            # 返回空DataFrame但包含列名，确保下游不报错
+            return pd.DataFrame(
+                columns=[
+                    "stock_code",
+                    "stock_name",
+                    "industry_code",
+                    "industry_name",
+                    "list_date",
+                    "is_st",
+                ]
+            )
+
+        return self._batch_request(stock_codes, _fetch_chunk)
+
+    def get_stock_financial_data(
+        self,
+        stock_codes: Union[str, List[str]],
+        start_date: datetime,
+        end_date: datetime,
+        report_type: str = "report",
+    ) -> pd.DataFrame:
+        """
+        获取股票财务数据
+
+        Args:
+            stock_codes: 股票代码或代码列表
+            start_date: 起始日期
+            end_date: 结束日期
+            report_type: 报告类型 ('report'=报告期, 'ttm'=TTM)
+
+        Returns:
+            DataFrame, 包含财务数据
+            列: [stock_code, report_date, total_assets, total_liabilities,
+                current_assets, current_liabilities, inventory, net_assets,
+                goodwill, operating_revenue, operating_cost, net_profit,
+                cash_flow_oper_act, roe, gross_margin]
+        """
+        self._check_connection()
+
+        if isinstance(stock_codes, str):
+            stock_codes = [stock_codes]
+
+        def _fetch_chunk(chunk_codes: List[str]) -> pd.DataFrame:
+            # TODO: 实际实现需要调用 iFinD API
+            # indicators = (
+            #     "ths_total_assets_stock;"
+            #     "ths_total_liabilities_stock;"
+            #     "ths_current_assets_stock;"
+            #     "ths_current_liabilities_stock;"
+            #     "ths_inventory_stock;"
+            #     "ths_net_assets_stock;"
+            #     "ths_goodwill_stock;"
+            #     "ths_operating_revenue_stock;"
+            #     "ths_operating_cost_stock;"
+            #     "ths_net_profit_stock;"
+            #     "ths_cash_flow_oper_act_stock;"
+            #     "ths_roe_stock;"
+            #     "ths_gross_profit_margin_stock"
+            # )
+            # params = "100;100;100;100;100;100;100;100;100;100;100;100;100"  # 报告期参数
+            # result = THS_DP(
+            #     thscode=';'.join(chunk_codes),
+            #     jsonIndicator=indicators,
+            #     jsonparam=params,
+            #     begintime=start_date.strftime('%Y-%m-%d'),
+            #     endtime=end_date.strftime('%Y-%m-%d')
+            # )
+
+            logger.warning(
+                f"iFinD API 实际实现待完成 - "
+                f"stock_codes={chunk_codes[:3]}..., "
+                f"date_range={start_date} to {end_date}"
+            )
+            return pd.DataFrame()
+
+        return self._batch_request(stock_codes, _fetch_chunk)
+
+    def get_stock_market_data(
+        self,
+        stock_codes: Union[str, List[str]],
+        start_date: datetime,
+        end_date: datetime,
+        frequency: str = "daily",
+    ) -> pd.DataFrame:
+        """
+        获取股票行情数据
+
+        Args:
+            stock_codes: 股票代码或代码列表
+            start_date: 起始日期
+            end_date: 结束日期
+            frequency: 数据频率 ('daily', 'weekly', 'monthly')
+
+        Returns:
+            DataFrame, 列: [stock_code, trade_date, close_price,
+                          market_value, pe_ttm, pb]
+        """
+        self._check_connection()
+
+        if isinstance(stock_codes, str):
+            stock_codes = [stock_codes]
+
+        def _fetch_chunk(chunk_codes: List[str]) -> pd.DataFrame:
+            # TODO: 实际实现需要调用 iFinD API
+            # indicators = (
+            #     "ths_close_price_stock;"
+            #     "ths_market_value_stock;"
+            #     "ths_pe_ttm_stock;"
+            #     "ths_pb_stock"
+            # )
+            # result = THS_DP(
+            #     thscode=';'.join(chunk_codes),
+            #     jsonIndicator=indicators,
+            #     jsonparam='',
+            #     begintime=start_date.strftime('%Y-%m-%d'),
+            #     endtime=end_date.strftime('%Y-%m-%d')
+            # )
+
+            logger.warning(
+                f"iFinD API 实际实现待完成 - "
+                f"stock_codes={chunk_codes[:3]}..., "
+                f"date_range={start_date} to {end_date}"
+            )
+            return pd.DataFrame()
+
+        return self._batch_request(stock_codes, _fetch_chunk)
+
+    def get_stock_shareholder_data(
+        self,
+        stock_codes: Union[str, List[str]],
+        start_date: datetime,
+        end_date: datetime,
+    ) -> pd.DataFrame:
+        """
+        获取股票股东数据
+
+        Args:
+            stock_codes: 股票代码或代码列表
+            start_date: 起始日期
+            end_date: 结束日期
+
+        Returns:
+            DataFrame, 列: [stock_code, report_date, institutional_ownership,
+                          pledge_ratio]
+        """
+        self._check_connection()
+
+        if isinstance(stock_codes, str):
+            stock_codes = [stock_codes]
+
+        def _fetch_chunk(chunk_codes: List[str]) -> pd.DataFrame:
+            # TODO: 实际实现需要调用 iFinD API
+            # indicators = (
+            #     "ths_institutional_ownership_stock;"
+            #     "ths_pledge_ratio_stock"
+            # )
+            # result = THS_DP(
+            #     thscode=';'.join(chunk_codes),
+            #     jsonIndicator=indicators,
+            #     jsonparam='',
+            #     begintime=start_date.strftime('%Y-%m-%d'),
+            #     endtime=end_date.strftime('%Y-%m-%d')
+            # )
+
+            logger.warning(
+                f"iFinD API 实际实现待完成 - stock_codes={chunk_codes[:3]}..."
+            )
+            return pd.DataFrame()
+
+        return self._batch_request(stock_codes, _fetch_chunk)
+
+    def get_industry_stocks(
+        self,
+        industry_code: str,
+        date: Optional[datetime] = None,
+    ) -> List[str]:
+        """
+        获取行业成分股列表
+
+        Args:
+            industry_code: 行业代码（申万二级）
+            date: 查询日期，为 None 则使用最新
+
+        Returns:
+            股票代码列表
+        """
+        self._check_connection()
+
+        def _fetch():
+            # TODO: 实际实现需要调用 iFinD API
+            # query_date = date.strftime('%Y-%m-%d') if date else datetime.now().strftime('%Y-%m-%d')
+            # result = THS_DateQuery(
+            #     thscode=industry_code,
+            #     jsonIndicator="ths_member_stock",
+            #     jsonparam="",
+            #     begintime=query_date,
+            #     endtime=query_date
+            # )
+
+            logger.warning(
+                f"iFinD API 实际实现待完成 - industry_code={industry_code}"
+            )
+            return []
+
+        return self._retry_request(_fetch)
+
+    def batch_fetch_stock_data(
+        self,
+        stock_codes: List[str],
+        start_date: datetime,
+        end_date: datetime,
+        data_types: Optional[List[str]] = None,
+    ) -> Dict[str, pd.DataFrame]:
+        """
+        批量获取股票数据
+
+        Args:
+            stock_codes: 股票代码列表
+            start_date: 起始日期
+            end_date: 结束日期
+            data_types: 数据类型列表 ['basic', 'financial', 'market', 'shareholder']
+                       默认获取所有类型
+
+        Returns:
+            字典: {data_type: DataFrame}
+        """
+        self._check_connection()
+
+        if data_types is None:
+            data_types = ["basic", "financial", "market", "shareholder"]
+
+        results = {}
+
+        logger.info(
+            f"开始批量获取股票数据: {len(stock_codes)} 只股票, "
+            f"数据类型: {data_types}"
+        )
+
+        # 基础信息
+        if "basic" in data_types:
+            try:
+                results["basic"] = self.get_stock_basic_info(stock_codes)
+                logger.info(f"基础信息获取完成: {len(results['basic'])} 条记录")
+            except Exception as e:
+                logger.error(f"基础信息获取失败: {e}")
+                results["basic"] = pd.DataFrame()
+
+        # 财务数据
+        if "financial" in data_types:
+            try:
+                results["financial"] = self.get_stock_financial_data(
+                    stock_codes, start_date, end_date
+                )
+                logger.info(f"财务数据获取完成: {len(results['financial'])} 条记录")
+            except Exception as e:
+                logger.error(f"财务数据获取失败: {e}")
+                results["financial"] = pd.DataFrame()
+
+        # 行情数据
+        if "market" in data_types:
+            try:
+                results["market"] = self.get_stock_market_data(
+                    stock_codes, start_date, end_date
+                )
+                logger.info(f"行情数据获取完成: {len(results['market'])} 条记录")
+            except Exception as e:
+                logger.error(f"行情数据获取失败: {e}")
+                results["market"] = pd.DataFrame()
+
+        # 股东数据
+        if "shareholder" in data_types:
+            try:
+                results["shareholder"] = self.get_stock_shareholder_data(
+                    stock_codes, start_date, end_date
+                )
+                logger.info(f"股东数据获取完成: {len(results['shareholder'])} 条记录")
+            except Exception as e:
+                logger.error(f"股东数据获取失败: {e}")
+                results["shareholder"] = pd.DataFrame()
+
+        logger.success(f"批量数据获取完成: {len(data_types)} 种数据类型")
+
+        return results
 
     def batch_fetch_industry_indicators(
         self,

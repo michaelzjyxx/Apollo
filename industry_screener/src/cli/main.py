@@ -13,7 +13,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.utils import setup_logger
-from .commands import backtest, data, scheduler
+from .commands import backtest, data, pool, scheduler, stock
 
 
 @click.group()
@@ -47,6 +47,8 @@ def version():
 cli.add_command(data)
 cli.add_command(backtest)
 cli.add_command(scheduler)
+cli.add_command(stock)
+cli.add_command(pool)
 
 
 if __name__ == "__main__":

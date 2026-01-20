@@ -1,0 +1,139 @@
+# 股票评分权重配置文件
+# 复用行业评分的配置结构，适配股票筛选的50+50评分体系
+
+# ========== 总分配置 ==========
+total_score: 100
+pass_threshold: 60  # 入池最低分
+
+# ========== 财务质量评分 (50分) ==========
+financial_quality:
+  total_weight: 50
+
+  # ROE稳定性 (15分)
+  roe_stability:
+    weight: 15
+    metric: 'roe_3y_avg'
+    rules:
+      - {min: 0.20, max: null, score: 15, desc: '优秀 (>20%)'}
+      - {min: 0.15, max: 0.20, score: 10, desc: '良好 (15-20%)'}
+      - {min: 0.12, max: 0.15, score: 6, desc: '及格 (12-15%)'}
+      - {min: null, max: 0.12, score: 0, desc: '不达标 (<12%)'}
+
+  # ROIC水平 (15分)
+  roic_level:
+    weight: 15
+    metric: 'roic_3y_avg'
+    rules:
+      - {min: 0.15, max: null, score: 15, desc: '优秀 (>15%)'}
+      - {min: 0.12, max: 0.15, score: 10, desc: '良好 (12-15%)'}
+      - {min: 0.10, max: 0.12, score: 6, desc: '及格 (10-12%)'}
+      - {min: null, max: 0.10, score: 0, desc: '不达标 (<10%)'}
+
+  # 现金流质量 (12分)
+  cashflow_quality:
+    weight: 12
+    metric: 'ocf_ni_ratio'
+    unit: 'ratio'
+    rules:
+      - {min: 1.2, max: null, score: 12, desc: '优秀 (>1.2)'}
+      - {min: 0.8, max: 1.2, score: 8, desc: '良好 (0.8-1.2)'}
+      - {min: 0.5, max: 0.8, score: 4, desc: '及格 (0.5-0.8)'}
+      - {min: null, max: 0.5, score: 0, desc: '不达标 (<0.5)'}
+
+  # 负债率 (8分)
+  leverage:
+    weight: 8
+    metric: 'debt_ratio'
+    unit: 'ratio'
+    reverse: true  # 值越小得分越高
+    rules:
+      - {min: null, max: 0.30, score: 8, desc: '优秀 (<30%)'}
+      - {min: 0.30, max: 0.50, score: 5, desc: '良好 (30-50%)'}
+      - {min: 0.50, max: 0.70, score: 2, desc: '及格 (50-70%)'}
+      - {min: 0.70, max: null, score: 0, desc: '不达标 (>70%)'}
+
+# ========== 竞争优势评分 (50分) ==========
+competitive_advantage:
+  total_weight: 50
+
+  # 龙头地位 (15分)
+  leader_position:
+    weight: 15
+    metric: 'revenue_rank'
+    rules:
+      # 绝对龙头：第1名 且 营收≥第2名的150%
+      - condition: 'rank == 1 and revenue >= second_revenue * 1.5'
+        score: 15
+        desc: '绝对龙头'
+      # 领先龙头：第1名 且 营收≥第2名的100%
+      - condition: 'rank == 1 and revenue >= second_revenue * 1.0'
+        score: 12
+        desc: '领先龙头'
+      # 龙头：第1名
+      - condition: 'rank == 1'
+        score: 10
+        desc: '龙头'
+      # 强势第二：第2名 且 营收≥第1名的50%
+      - condition: 'rank == 2 and revenue >= first_revenue * 0.5'
+        score: 8
+        desc: '强势第二'
+      # 前列：第2或第3名
+      - condition: 'rank in [2, 3]'
+        score: 5
+        desc: '前列'
+      # 其他
+      - condition: 'else'
+        score: 0
+        desc: '非龙头'
+
+  # 龙头地位趋势 (10分)
+  leader_trend:
+    weight: 10
+    metric: 'revenue_rank_change'
+    lookback_years: 3
+    rules:
+      # 排名变化 = 今年排名 - 3年前排名（负数表示上升）
+      - {change: -2, score: 10, desc: '快速崛起 (上升2名以上)'}
+      - {change: -1, score: 8, desc: '稳步上升 (上升1名)'}
+      - {change: 0, score: 6, desc: '稳定 (排名不变)'}
+      - {change: 1, score: 3, desc: '轻微下滑 (下降1名)'}
+      - {change: 2, score: 0, desc: '竞争力减弱 (下降2名以上)'}
+
+  # 盈利能力优势 (15分)
+  profit_margin:
+    weight: 15
+    metric: 'gross_margin_vs_industry'
+    unit: 'relative_advantage'  # 相对优势百分比
+    rules:
+      # 相对优势 = (公司毛利率 - 行业中位数) / 行业中位数
+      - {min: 0.30, max: null, score: 15, desc: '显著优势 (超出30%)'}
+      - {min: 0.20, max: 0.30, score: 12, desc: '明显优势 (超出20-30%)'}
+      - {min: 0.10, max: 0.20, score: 9, desc: '一定优势 (超出10-20%)'}
+      - {min: 0.00, max: 0.10, score: 5, desc: '略有优势 (超出0-10%)'}
+      - {min: null, max: 0.00, score: 0, desc: '无优势 (低于行业)'}
+    fallback_metric: 'roe_vs_industry'  # 如果毛利率不可靠，用ROE替代
+
+  # 成长性 (10分)
+  growth:
+    weight: 10
+    metric: 'revenue_cagr_3y'
+    unit: 'cagr'
+    rules:
+      - {min: 0.20, max: null, score: 10, desc: '高成长 (≥20%)'}
+      - {min: 0.15, max: 0.20, score: 8, desc: '较高成长 (15-20%)'}
+      - {min: 0.10, max: 0.15, score: 6, desc: '中等成长 (10-15%)'}
+      - {min: 0.05, max: 0.10, score: 3, desc: '低成长 (5-10%)'}
+      - {min: null, max: 0.05, score: 1, desc: '停滞 (<5%)'}
+
+# ========== 评分调整 ==========
+adjustments:
+  # 行业调整（可选）
+  industry_adjustment:
+    enabled: false
+    adjustments: {}
+
+  # 市值调整（可选）
+  market_cap_adjustment:
+    enabled: false
+    small_cap_penalty: 0  # 小市值惩罚
+    large_cap_bonus: 0  # 大市值奖励

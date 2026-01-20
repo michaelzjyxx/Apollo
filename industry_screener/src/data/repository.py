@@ -17,6 +17,11 @@ from .models import (
     IndustryScore,
     QualitativeScore,
     RawData,
+    Stock,
+    StockCalculated,
+    StockFinancial,
+    StockMarket,
+    StockScore,
 )
 
 # 泛型类型
@@ -457,4 +462,410 @@ class BacktestResultRepository(BaseRepository[BacktestResult]):
             .where(BacktestResult.strategy_name == strategy_name)
             .order_by(desc(BacktestResult.created_at))
         )
+        return list(self.session.execute(stmt).scalars().all())
+
+
+# ========== 股票相关仓库（新增） ==========
+
+
+class StockRepository(BaseRepository[Stock]):
+    """股票基础信息仓库"""
+
+    def __init__(self, session: Session):
+        super().__init__(session, Stock)
+
+    def get_by_code(self, stock_code: str) -> Optional[Stock]:
+        """
+        根据股票代码获取股票信息
+
+        Args:
+            stock_code: 股票代码
+
+        Returns:
+            股票实例或None
+        """
+        stmt = select(Stock).where(Stock.stock_code == stock_code)
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def get_by_industry(
+        self, industry_code: str, active_only: bool = True
+    ) -> List[Stock]:
+        """
+        获取行业成分股
+
+        Args:
+            industry_code: 行业代码
+            active_only: 是否只返回有效股票
+
+        Returns:
+            股票列表
+        """
+        stmt = select(Stock).where(Stock.industry_code == industry_code)
+
+        if active_only:
+            stmt = stmt.where(Stock.is_active == True)
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def get_active_stocks(self, exclude_st: bool = True) -> List[Stock]:
+        """
+        获取所有有效股票
+
+        Args:
+            exclude_st: 是否排除ST股票
+
+        Returns:
+            股票列表
+        """
+        stmt = select(Stock).where(Stock.is_active == True)
+
+        if exclude_st:
+            stmt = stmt.where(Stock.is_st == False)
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def bulk_upsert(self, stocks: List[Dict[str, Any]]) -> int:
+        """
+        批量插入或更新股票信息
+
+        Args:
+            stocks: 股票信息字典列表
+
+        Returns:
+            处理的记录数
+        """
+        count = 0
+        for stock_data in stocks:
+            stock_code = stock_data.get("stock_code")
+            existing = self.get_by_code(stock_code)
+
+            if existing:
+                # 更新
+                for key, value in stock_data.items():
+                    if key != "stock_code":
+                        setattr(existing, key, value)
+                existing.updated_at = datetime.now()
+            else:
+                # 插入
+                new_stock = Stock(**stock_data)
+                self.session.add(new_stock)
+
+            count += 1
+
+        self.session.flush()
+        return count
+
+
+class StockFinancialRepository(BaseRepository[StockFinancial]):
+    """股票财务数据仓库"""
+
+    def __init__(self, session: Session):
+        super().__init__(session, StockFinancial)
+
+    def get_by_stock_and_date(
+        self,
+        stock_code: str,
+        report_date: datetime,
+        indicator_name: Optional[str] = None,
+    ) -> List[StockFinancial]:
+        """
+        获取股票在特定报告期的财务数据
+
+        Args:
+            stock_code: 股票代码
+            report_date: 报告期
+            indicator_name: 指标名称（可选）
+
+        Returns:
+            财务数据列表
+        """
+        stmt = select(StockFinancial).where(
+            and_(
+                StockFinancial.stock_code == stock_code,
+                StockFinancial.report_date == report_date,
+            )
+        )
+
+        if indicator_name:
+            stmt = stmt.where(StockFinancial.indicator_name == indicator_name)
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def get_latest_by_stock(
+        self, stock_code: str, as_of_date: datetime
+    ) -> List[StockFinancial]:
+        """
+        获取股票截至某日期的最新财务数据（考虑公告日期）
+
+        Args:
+            stock_code: 股票代码
+            as_of_date: 截至日期
+
+        Returns:
+            财务数据列表
+        """
+        # 查询最新的已公告财报
+        subquery = (
+            select(func.max(StockFinancial.report_date))
+            .where(
+                and_(
+                    StockFinancial.stock_code == stock_code,
+                    StockFinancial.announce_date <= as_of_date,
+                )
+            )
+            .scalar_subquery()
+        )
+
+        stmt = select(StockFinancial).where(
+            and_(
+                StockFinancial.stock_code == stock_code,
+                StockFinancial.report_date == subquery,
+            )
+        )
+
+        return list(self.session.execute(stmt).scalars().all())
+
+
+class StockMarketRepository(BaseRepository[StockMarket]):
+    """股票行情数据仓库"""
+
+    def __init__(self, session: Session):
+        super().__init__(session, StockMarket)
+
+    def get_by_stock_and_date_range(
+        self, stock_code: str, start_date: datetime, end_date: datetime
+    ) -> List[StockMarket]:
+        """
+        获取股票在日期范围内的行情数据
+
+        Args:
+            stock_code: 股票代码
+            start_date: 开始日期
+            end_date: 结束日期
+
+        Returns:
+            行情数据列表
+        """
+        stmt = (
+            select(StockMarket)
+            .where(
+                and_(
+                    StockMarket.stock_code == stock_code,
+                    StockMarket.trade_date >= start_date,
+                    StockMarket.trade_date <= end_date,
+                )
+            )
+            .order_by(StockMarket.trade_date)
+        )
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def get_latest_price(
+        self, stock_code: str, as_of_date: datetime
+    ) -> Optional[StockMarket]:
+        """
+        获取股票截至某日期的最新价格
+
+        Args:
+            stock_code: 股票代码
+            as_of_date: 截至日期
+
+        Returns:
+            行情数据或None
+        """
+        stmt = (
+            select(StockMarket)
+            .where(
+                and_(
+                    StockMarket.stock_code == stock_code,
+                    StockMarket.trade_date <= as_of_date,
+                )
+            )
+            .order_by(desc(StockMarket.trade_date))
+            .limit(1)
+        )
+
+        return self.session.execute(stmt).scalar_one_or_none()
+
+
+class StockCalculatedRepository(BaseRepository[StockCalculated]):
+    """股票计算指标仓库"""
+
+    def __init__(self, session: Session):
+        super().__init__(session, StockCalculated)
+
+    def get_by_stock_and_date(
+        self, stock_code: str, calc_date: datetime
+    ) -> Optional[StockCalculated]:
+        """
+        获取股票在特定日期的计算指标
+
+        Args:
+            stock_code: 股票代码
+            calc_date: 计算日期
+
+        Returns:
+            计算指标或None
+        """
+        stmt = select(StockCalculated).where(
+            and_(
+                StockCalculated.stock_code == stock_code,
+                StockCalculated.calc_date == calc_date,
+            )
+        )
+
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def get_by_industry_and_date(
+        self, industry_code: str, calc_date: datetime
+    ) -> List[StockCalculated]:
+        """
+        获取行业内所有股票在特定日期的计算指标
+
+        Args:
+            industry_code: 行业代码
+            calc_date: 计算日期
+
+        Returns:
+            计算指标列表
+        """
+        stmt = select(StockCalculated).where(
+            and_(
+                StockCalculated.industry_code == industry_code,
+                StockCalculated.calc_date == calc_date,
+            )
+        )
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def get_latest_by_stock(
+        self, stock_code: str
+    ) -> Optional[StockCalculated]:
+        """
+        获取股票的最新计算指标
+
+        Args:
+            stock_code: 股票代码
+
+        Returns:
+            计算指标或None
+        """
+        stmt = (
+            select(StockCalculated)
+            .where(StockCalculated.stock_code == stock_code)
+            .order_by(desc(StockCalculated.calc_date))
+            .limit(1)
+        )
+
+        return self.session.execute(stmt).scalar_one_or_none()
+
+
+class StockScoreRepository(BaseRepository[StockScore]):
+    """股票评分仓库"""
+
+    def __init__(self, session: Session):
+        super().__init__(session, StockScore)
+
+    def get_by_stock_and_date(
+        self, stock_code: str, score_date: datetime
+    ) -> Optional[StockScore]:
+        """
+        获取股票在特定日期的评分
+
+        Args:
+            stock_code: 股票代码
+            score_date: 评分日期
+
+        Returns:
+            评分或None
+        """
+        stmt = select(StockScore).where(
+            and_(
+                StockScore.stock_code == stock_code,
+                StockScore.score_date == score_date,
+            )
+        )
+
+        return self.session.execute(stmt).scalar_one_or_none()
+
+    def get_quality_pool(
+        self,
+        score_date: datetime,
+        min_score: Optional[float] = None,
+        passed_only: bool = True,
+    ) -> List[StockScore]:
+        """
+        获取优质公司池
+
+        Args:
+            score_date: 评分日期
+            min_score: 最低得分
+            passed_only: 是否只返回通过筛选的股票
+
+        Returns:
+            评分列表
+        """
+        stmt = select(StockScore).where(StockScore.score_date == score_date)
+
+        if passed_only:
+            stmt = stmt.where(StockScore.passed_scoring == True)
+
+        if min_score is not None:
+            stmt = stmt.where(StockScore.total_score >= min_score)
+
+        stmt = stmt.order_by(desc(StockScore.total_score))
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def get_by_industry(
+        self, industry_code: str, score_date: datetime
+    ) -> List[StockScore]:
+        """
+        获取行业内所有股票的评分
+
+        Args:
+            industry_code: 行业代码
+            score_date: 评分日期
+
+        Returns:
+            评分列表
+        """
+        stmt = (
+            select(StockScore)
+            .where(
+                and_(
+                    StockScore.industry_code == industry_code,
+                    StockScore.score_date == score_date,
+                )
+            )
+            .order_by(desc(StockScore.total_score))
+        )
+
+        return list(self.session.execute(stmt).scalars().all())
+
+    def get_top_n(
+        self, score_date: datetime, n: int = 100
+    ) -> List[StockScore]:
+        """
+        获取得分最高的N只股票
+
+        Args:
+            score_date: 评分日期
+            n: 数量
+
+        Returns:
+            评分列表
+        """
+        stmt = (
+            select(StockScore)
+            .where(
+                and_(
+                    StockScore.score_date == score_date,
+                    StockScore.passed_scoring == True,
+                )
+            )
+            .order_by(desc(StockScore.total_score))
+            .limit(n)
+        )
+
         return list(self.session.execute(stmt).scalars().all())

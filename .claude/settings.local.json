@@ -14,7 +14,16 @@
       "Bash(python3:*)",
       "Bash(pip3 install:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: A股行业筛选系统\n\n- 实现完整的行业评分系统\\(100分制,8个维度\\)\n- 支持iFinD API数据获取\n- 包含回测引擎和策略验证\n- Streamlit Web界面\n- CLI命令行工具\n- 定时任务调度\n- 完整的配置管理\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(gh auth login:*)",
+      "Bash(gh repo create:*)",
+      "Bash(GH_CONFIG_DIR=/tmp/gh_config gh auth login:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git config --global alias.save '!git add -A && git commit -m')",
+      "Bash(git config --global alias.sync '!git add -A && git commit -m \"\"$1\"\" && git push')",
+      "Bash(git config:*)"
     ]
   }
 }

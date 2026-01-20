@@ -29,16 +29,25 @@ from ..utils import (
 )
 
 
-class ScoringEngine:
-    """评分引擎"""
+from .base import BaseScorer
+
+class IndustryScorer(BaseScorer):
+    """行业评分引擎"""
 
     def __init__(self):
         """初始化评分引擎"""
         # 加载评分权重配置
-        self.weights = get_config("scoring_weights")
+        config = get_config("scoring_weights")
+        super().__init__(config)
+        self.weights = config  # 兼容旧代码使用 self.weights
         self.total_score = self.weights.get("total_score", 100)
 
-        logger.info("评分引擎初始化成功")
+        logger.info("行业评分引擎初始化成功")
+
+    def score(self, entity_id: str, date: Any) -> Any:
+        # TODO: 实现统一的score接口，目前保留原有的分维度评分方法供外部调用
+        # 这里暂时作为占位符，因为实际调用是分步骤的
+        pass
 
     # ========== 竞争格局评分 (15分) ==========
 
@@ -749,3 +758,7 @@ class ScoringEngine:
         )
 
         return pe_extreme or pb_extreme
+
+
+# 兼容旧代码
+ScoringEngine = IndustryScorer

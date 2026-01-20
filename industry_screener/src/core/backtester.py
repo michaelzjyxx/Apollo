@@ -596,3 +596,319 @@ class BacktestEngine:
         }
 
         return summary
+
+    # ========== 股票池回测功能 ==========
+
+    def run_stock_pool_backtest(
+        self,
+        strategy_name: str,
+        start_date: datetime,
+        end_date: datetime,
+        min_score: Optional[float] = 60.0,
+        max_stocks: Optional[int] = 30,
+        weight_method: Optional[str] = None,
+        rebalance_frequency: Optional[str] = None,
+        benchmark: Optional[str] = None,
+    ) -> BacktestResult:
+        """
+        运行股票池回测
+
+        策略逻辑:
+        1. 每期从优质公司池中选择得分最高的N只股票
+        2. 按照指定的权重方法分配仓位
+        3. 定期调仓(月度/季度)
+        4. 计算收益率、夏普比率等绩效指标
+
+        Args:
+            strategy_name: 策略名称
+            start_date: 起始日期
+            end_date: 结束日期
+            min_score: 最低入池分数
+            max_stocks: 最多持仓股票数
+            weight_method: 权重方法('equal'/'score'/'market_cap')
+            rebalance_frequency: 调仓频率('monthly'/'quarterly')
+            benchmark: 基准指数代码
+
+        Returns:
+            回测结果
+        """
+        # 使用默认配置
+        if weight_method is None:
+            weight_method = WeightMethod.EQUAL
+        if rebalance_frequency is None:
+            rebalance_frequency = RebalanceFrequency.MONTHLY
+        if benchmark is None:
+            benchmark = DEFAULT_BENCHMARK
+
+        logger.info(
+            f"开始股票池回测: {strategy_name} "
+            f"({start_date.date()} ~ {end_date.date()})"
+        )
+        logger.info(
+            f"参数: 最低分={min_score}, "
+            f"最多持{max_stocks}只股票, 权重={weight_method}"
+        )
+
+        # 1. 获取再平衡日期列表
+        rebalance_dates = self._get_rebalance_dates(
+            start_date, end_date, rebalance_frequency
+        )
+
+        logger.info(f"再平衡次数: {len(rebalance_dates)}")
+
+        # 2. 生成股票池持仓记录
+        holdings = self._generate_stock_pool_holdings(
+            rebalance_dates, min_score, max_stocks, weight_method
+        )
+
+        # 3. 计算每日收益
+        daily_returns = self._calculate_stock_pool_daily_returns(
+            holdings, start_date, end_date
+        )
+
+        # 4. 计算绩效指标
+        metrics = self._calculate_performance_metrics(daily_returns)
+
+        # 5. 获取基准收益
+        benchmark_return = self._get_benchmark_return(
+            benchmark, start_date, end_date
+        )
+
+        # 6. 生成交易记录
+        trades = self._generate_stock_trades(holdings)
+
+        # 7. 保存回测结果
+        result = self._save_backtest_result(
+            strategy_name=strategy_name,
+            start_date=start_date,
+            end_date=end_date,
+            parameters={
+                "type": "stock_pool",
+                "min_score": min_score,
+                "max_stocks": max_stocks,
+                "weight_method": weight_method,
+                "rebalance_frequency": rebalance_frequency,
+            },
+            metrics=metrics,
+            benchmark_code=benchmark,
+            benchmark_return=benchmark_return,
+            holdings=holdings,
+            trades=trades,
+            daily_returns=daily_returns,
+        )
+
+        logger.success(
+            f"股票池回测完成: 总收益{metrics['total_return']:.2f}%, "
+            f"年化收益{metrics['annual_return']:.2f}%, "
+            f"夏普比率{metrics['sharpe_ratio']:.2f}, "
+            f"最大回撤{metrics['max_drawdown']:.2f}%"
+        )
+
+        return result
+
+    def _generate_stock_pool_holdings(
+        self,
+        rebalance_dates: List[datetime],
+        min_score: float,
+        max_stocks: int,
+        weight_method: str,
+    ) -> List[Dict]:
+        """
+        生成股票池持仓记录
+
+        Args:
+            rebalance_dates: 再平衡日期列表
+            min_score: 最低得分
+            max_stocks: 最多持仓数
+            weight_method: 权重方法
+
+        Returns:
+            持仓记录列表
+        """
+        from ..data.repository import StockScoreRepository
+
+        score_repo = StockScoreRepository(self.session)
+        holdings = []
+
+        for date in rebalance_dates:
+            # 获取优质公司池
+            pool = score_repo.get_quality_pool(
+                score_date=date, min_score=min_score, passed_only=True
+            )
+
+            # 按得分排序,选择前N只
+            pool_sorted = sorted(
+                pool, key=lambda x: x.total_score, reverse=True
+            )
+            selected_stocks = pool_sorted[:max_stocks]
+
+            if len(selected_stocks) == 0:
+                logger.warning(f"{date.date()}: 没有符合条件的股票")
+                holdings.append({"date": date, "stocks": []})
+                continue
+
+            # 计算权重
+            weights = self._calculate_stock_weights(
+                selected_stocks, weight_method
+            )
+
+            # 构建持仓记录
+            holding = {
+                "date": date,
+                "stocks": [
+                    {
+                        "stock_code": stock.stock_code,
+                        "stock_name": stock.stock_name,
+                        "industry_name": stock.industry_name,
+                        "score": stock.total_score,
+                        "weight": weights[i],
+                    }
+                    for i, stock in enumerate(selected_stocks)
+                ],
+            }
+
+            holdings.append(holding)
+
+            logger.debug(
+                f"{date.date()}: 持仓 {len(selected_stocks)} 只股票, "
+                f"平均得分 {sum(s.total_score for s in selected_stocks) / len(selected_stocks):.1f}"
+            )
+
+        return holdings
+
+    def _calculate_stock_weights(
+        self, stocks: List, method: str
+    ) -> List[float]:
+        """
+        计算股票权重
+
+        Args:
+            stocks: 股票评分列表
+            method: 权重方法
+
+        Returns:
+            权重列表
+        """
+        n = len(stocks)
+
+        if n == 0:
+            return []
+
+        if method == WeightMethod.EQUAL:
+            # 等权
+            return [1.0 / n] * n
+
+        elif method == WeightMethod.SCORE:
+            # 评分加权
+            total_score = sum(s.total_score or 0 for s in stocks)
+            if total_score == 0:
+                return [1.0 / n] * n
+            return [(s.total_score or 0) / total_score for s in stocks]
+
+        elif method == WeightMethod.MARKET_CAP:
+            # 市值加权 (需要额外数据)
+            logger.warning("市值加权暂未实现,使用等权")
+            return [1.0 / n] * n
+
+        else:
+            return [1.0 / n] * n
+
+    def _calculate_stock_pool_daily_returns(
+        self,
+        holdings: List[Dict],
+        start_date: datetime,
+        end_date: datetime,
+    ) -> pd.DataFrame:
+        """
+        计算股票池每日收益
+
+        Args:
+            holdings: 持仓记录
+            start_date: 起始日期
+            end_date: 结束日期
+
+        Returns:
+            每日收益 DataFrame
+        """
+        # TODO: 实际实现需要从 API 获取个股价格数据
+        # 这里返回模拟数据
+
+        dates = pd.date_range(start_date, end_date, freq="D")
+        returns = np.random.normal(0.0012, 0.018, len(dates))  # 模拟收益
+        cumulative = (1 + pd.Series(returns)).cumprod() - 1
+
+        df = pd.DataFrame({
+            "date": dates,
+            "return": returns,
+            "cumulative_return": cumulative,
+        })
+
+        logger.warning("使用模拟收益数据,实际实现需要从API获取个股价格")
+        return df
+
+    def _generate_stock_trades(self, holdings: List[Dict]) -> List[Dict]:
+        """
+        生成股票交易记录
+
+        Args:
+            holdings: 持仓记录
+
+        Returns:
+            交易记录列表
+        """
+        trades = []
+
+        for i in range(1, len(holdings)):
+            prev_holding = holdings[i - 1]
+            curr_holding = holdings[i]
+
+            # 对比前后持仓
+            prev_codes = {
+                stock["stock_code"] for stock in prev_holding["stocks"]
+            }
+            curr_codes = {
+                stock["stock_code"] for stock in curr_holding["stocks"]
+            }
+
+            # 卖出
+            sell_codes = prev_codes - curr_codes
+            for code in sell_codes:
+                prev_stock = next(
+                    (
+                        s
+                        for s in prev_holding["stocks"]
+                        if s["stock_code"] == code
+                    ),
+                    None,
+                )
+                if prev_stock:
+                    trades.append({
+                        "date": curr_holding["date"],
+                        "action": "sell",
+                        "stock_code": code,
+                        "stock_name": prev_stock["stock_name"],
+                        "reason": "调仓",
+                    })
+
+            # 买入
+            buy_codes = curr_codes - prev_codes
+            for code in buy_codes:
+                curr_stock = next(
+                    (
+                        s
+                        for s in curr_holding["stocks"]
+                        if s["stock_code"] == code
+                    ),
+                    None,
+                )
+                if curr_stock:
+                    trades.append({
+                        "date": curr_holding["date"],
+                        "action": "buy",
+                        "stock_code": code,
+                        "stock_name": curr_stock["stock_name"],
+                        "score": curr_stock["score"],
+                    })
+
+        logger.info(f"生成 {len(trades)} 笔股票交易记录")
+        return trades

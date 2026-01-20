@@ -501,3 +501,296 @@ class IndicatorCalculator:
             return data.clip(mean - 3 * std, mean + 3 * std)
         else:
             return data
+
+    # ========== 股票指标计算（新增） ==========
+
+    def calculate_roe(
+        self, net_profit: float, equity: float
+    ) -> Optional[float]:
+        """
+        计算ROE
+        
+        Args:
+            net_profit: 净利润
+            equity: 股东权益
+            
+        Returns:
+            ROE值(%)
+        """
+        if equity is None or equity == 0:
+            return None
+        return (net_profit / equity) * 100
+
+    def calculate_roe_3y_avg(self, roe_values: List[float]) -> Optional[float]:
+        """
+        计算3年平均ROE
+
+        Args:
+            roe_values: ROE值列表（至少3个）
+
+        Returns:
+            3年平均ROE
+        """
+        if not roe_values or len(roe_values) < 3:
+            return None
+        return sum(roe_values[-3:]) / 3
+
+    def calculate_roic(
+        self,
+        net_profit: float,
+        interest_expense: float,
+        tax_rate: float,
+        equity: float,
+        interest_bearing_debt: float,
+    ) -> Optional[float]:
+        """
+        计算ROIC (投入资本回报率)
+
+        Args:
+            net_profit: 净利润
+            interest_expense: 利息费用
+            tax_rate: 税率
+            equity: 股东权益
+            interest_bearing_debt: 有息负债
+
+        Returns:
+            ROIC值
+        """
+        # NOPAT = 净利润 + 利息费用 × (1 - 税率)
+        nopat = net_profit + interest_expense * (1 - tax_rate)
+
+        # 投入资本 = 股东权益 + 有息负债
+        invested_capital = equity + interest_bearing_debt
+
+        if invested_capital == 0:
+            return None
+
+        return nopat / invested_capital
+
+    def calculate_roic_3y_avg(self, roic_values: List[float]) -> Optional[float]:
+        """
+        计算3年平均ROIC
+
+        Args:
+            roic_values: ROIC值列表（至少3个）
+
+        Returns:
+            3年平均ROIC
+        """
+        if not roic_values or len(roic_values) < 3:
+            return None
+        return sum(roic_values[-3:]) / 3
+
+    def calculate_cr3(self, revenues: List[float]) -> Optional[float]:
+        """
+        计算行业集中度CR3
+
+        Args:
+            revenues: 行业内所有公司的营收列表
+
+        Returns:
+            CR3值（前3名营收占比）
+        """
+        if not revenues or len(revenues) == 0:
+            return None
+
+        total_revenue = sum(revenues)
+        if total_revenue == 0:
+            return None
+
+        top_3 = sorted(revenues, reverse=True)[:3]
+        cr3 = sum(top_3) / total_revenue
+
+        logger.debug(f"CR3 = {cr3:.2%}")
+        return cr3
+
+    def calculate_revenue_rank(
+        self, stock_code: str, industry_revenues: Dict[str, float]
+    ) -> Optional[int]:
+        """
+        计算营收排名
+
+        Args:
+            stock_code: 股票代码
+            industry_revenues: 行业内所有公司的营收字典 {股票代码: 营收}
+
+        Returns:
+            排名（1表示第一名）
+        """
+        if not industry_revenues or stock_code not in industry_revenues:
+            return None
+
+        sorted_stocks = sorted(
+            industry_revenues.items(), key=lambda x: x[1], reverse=True
+        )
+
+        for rank, (code, _) in enumerate(sorted_stocks, 1):
+            if code == stock_code:
+                return rank
+
+        return None
+
+    def calculate_cagr(
+        self, start_value: float, end_value: float, years: int
+    ) -> Optional[float]:
+        """
+        计算复合年均增长率 (CAGR)
+
+        Args:
+            start_value: 起始值
+            end_value: 结束值
+            years: 年数
+
+        Returns:
+            CAGR值
+        """
+        if start_value is None or end_value is None or years <= 0:
+            return None
+
+        if start_value <= 0:
+            return None
+
+        cagr = (end_value / start_value) ** (1 / years) - 1
+        logger.debug(f"CAGR = {cagr:.2%}")
+        return cagr
+
+    def calculate_debt_ratio(
+        self, total_liabilities: float, total_assets: float
+    ) -> Optional[float]:
+        """
+        计算资产负债率
+
+        Args:
+            total_liabilities: 总负债
+            total_assets: 总资产
+
+        Returns:
+            负债率
+        """
+        if total_assets is None or total_assets == 0:
+            return None
+        return total_liabilities / total_assets
+
+    def calculate_current_ratio(
+        self, current_assets: float, current_liabilities: float
+    ) -> Optional[float]:
+        """
+        计算流动比率
+
+        Args:
+            current_assets: 流动资产
+            current_liabilities: 流动负债
+
+        Returns:
+            流动比率
+        """
+        if current_liabilities is None or current_liabilities == 0:
+            return None
+        return current_assets / current_liabilities
+
+    def calculate_quick_ratio(
+        self,
+        current_assets: float,
+        inventory: float,
+        current_liabilities: float,
+    ) -> Optional[float]:
+        """
+        计算速动比率
+
+        Args:
+            current_assets: 流动资产
+            inventory: 存货
+            current_liabilities: 流动负债
+
+        Returns:
+            速动比率
+        """
+        if current_liabilities is None or current_liabilities == 0:
+            return None
+
+        quick_assets = current_assets - inventory
+        return quick_assets / current_liabilities
+
+    def calculate_ocf_ni_ratio(
+        self, operating_cashflow: float, net_income: float
+    ) -> Optional[float]:
+        """
+        计算经营现金流/净利润比率
+
+        Args:
+            operating_cashflow: 经营性现金流
+            net_income: 净利润
+
+        Returns:
+            现金流/净利润比率
+        """
+        if net_income is None or net_income == 0:
+            return None
+        return operating_cashflow / net_income
+
+    def calculate_gross_margin(
+        self, revenue: float, cost_of_revenue: float
+    ) -> Optional[float]:
+        """
+        计算毛利率
+        
+        Args:
+            revenue: 营业收入
+            cost_of_revenue: 营业成本
+            
+        Returns:
+            毛利率(%)
+        """
+        if revenue is None or revenue == 0:
+            return None
+            
+        gross_profit = revenue - cost_of_revenue
+        return (gross_profit / revenue) * 100
+
+    def calculate_gross_margin_vs_industry(
+        self, company_margin: float, industry_median: float
+    ) -> Optional[float]:
+        """
+        计算毛利率相对行业优势
+
+        Args:
+            company_margin: 公司毛利率
+            industry_median: 行业中位数毛利率
+
+        Returns:
+            相对优势百分比
+        """
+        if industry_median is None or industry_median == 0:
+            return None
+
+        return (company_margin - industry_median) / industry_median
+
+    def calculate_roe_slope(self, roe_values: List[float]) -> Optional[float]:
+        """
+        计算ROE斜率（用于判断趋势）
+
+        Args:
+            roe_values: ROE值列表（按时间顺序）
+
+        Returns:
+            斜率值
+        """
+        if not roe_values or len(roe_values) < 2:
+            return None
+
+        # 简单线性回归
+        n = len(roe_values)
+        x = list(range(n))
+        y = roe_values
+
+        x_mean = sum(x) / n
+        y_mean = sum(y) / n
+
+        numerator = sum((x[i] - x_mean) * (y[i] - y_mean) for i in range(n))
+        denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
+
+        if denominator == 0:
+            return None
+
+        slope = numerator / denominator
+        return slope

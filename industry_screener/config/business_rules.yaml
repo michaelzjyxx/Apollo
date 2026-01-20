@@ -1,0 +1,107 @@
+# 业务规则配置文件
+# 定义行业分类、筛选门槛、排除项等硬性规则
+
+# ========== 基础资格筛选配置 ==========
+basic_qualification:
+  # 盈利能力
+  profitability:
+    roe_3y_avg_min: 0.12  # ROE 3年平均最低值
+    roic_3y_avg_min: 0.10  # ROIC 3年平均最低值
+    allow_single_year_fluctuation: true  # 允许单年波动
+
+  # 财务安全
+  financial_safety:
+    debt_ratio_max: 0.70  # 最大负债率
+    operating_cashflow_min: 0  # 经营性现金流最小值（近4季度累计）
+    current_ratio_min: 1.0  # 最小流动比率
+    quick_ratio_min: 0.8  # 最小速动比率
+
+  # 龙头地位（根据行业集中度动态调整）
+  leader_position:
+    revenue_vs_leader_min: 0.30  # 营收占行业第1名最小比例
+
+# ========== 行业集中度标准 ==========
+industry_concentration:
+  # 高集中度行业
+  high:
+    cr3_threshold: 0.50  # CR3 >= 50%
+    top_n: 3  # 前3名
+    examples: ['白酒', '乳制品', '调味品']
+
+  # 中集中度行业
+  medium:
+    cr3_threshold: 0.30  # 30% <= CR3 < 50%
+    top_n: 2  # 前2名
+    examples: ['家电', '化工', '医药']
+
+  # 低集中度行业
+  low:
+    cr3_threshold: 0.00  # CR3 < 30%
+    top_n: 1  # 仅第1名
+    examples: ['机械设备', '纺织服装']
+
+# ========== 排除项配置 ==========
+exclusion:
+  # ST股票
+  st_stocks:
+    enabled: true
+    reason: '有退市风险'
+
+  # 营收排名持续下降
+  revenue_rank_decline:
+    enabled: true
+    consecutive_years: 2  # 连续下降年数
+    reason: '竞争力正在减弱，护城河正在消失'
+
+  # 估值陷阱（区分周期股和非周期股）
+  valuation_trap:
+    enabled: true
+    # 非周期股：PE很低但ROE持续下降
+    non_cyclical:
+      roe_slope_threshold: -0.02  # ROE斜率阈值
+      reason: '低估值是合理的，不是错杀'
+    # 周期股：允许ROE波动，但最低值不能太低
+    cyclical:
+      roe_min: 0.08  # 近3年ROE最低值
+      reason: 'ROE波动过大，周期底部风险高'
+
+  # 治理风险
+  governance_risk:
+    enabled: true
+    pledge_ratio_max: 0.50  # 最大质押比例
+    related_transaction_ratio_max: 0.30  # 最大关联交易比例
+    check_fraud_history: true  # 检查造假历史
+    fraud_lookback_years: 5  # 造假历史回溯年数
+    reason: '治理风险高，基本面不可靠'
+
+  # 商誉地雷
+  goodwill_risk:
+    enabled: true
+    goodwill_ratio_max: 0.30  # 商誉/净资产最大比例
+    reason: '商誉减值风险高'
+
+  # 连续业绩下滑
+  profit_decline:
+    enabled: true
+    decline_threshold: -0.20  # 下滑阈值
+    consecutive_years: 2  # 连续下滑年数
+    reason: '基本面恶化'
+
+# ========== 周期行业定义 ==========
+cyclical_industries:
+  - 化工
+  - 有色金属
+  - 钢铁
+  - 煤炭
+  - 农林牧渔
+  - 机械设备
+  - 汽车
+  - 建筑材料
+  - 房地产
+
+# ========== 行业分散度控制 ==========
+diversification:
+  enabled: true
+  max_industry_ratio: 0.35  # 单一行业最大占比
+  min_pool_size_for_diversification: 30  # 启用分散度控制的最小池规模
+  small_industry_threshold: 2  # 小行业阈值（不受限制）

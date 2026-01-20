@@ -1,0 +1,291 @@
+# 申万行业分类完整配置
+# 数据来源: 申万宏源研究
+# 更新日期: 2024年
+
+# ========== 申万一级行业 (31个) ==========
+shenwan_l1:
+  - code: '801010.SI'
+    name: '农林牧渔'
+  - code: '801020.SI'
+    name: '采掘'
+  - code: '801030.SI'
+    name: '化工'
+  - code: '801040.SI'
+    name: '钢铁'
+  - code: '801050.SI'
+    name: '有色金属'
+  - code: '801080.SI'
+    name: '电子'
+  - code: '801110.SI'
+    name: '家用电器'
+  - code: '801120.SI'
+    name: '食品饮料'
+  - code: '801130.SI'
+    name: '纺织服装'
+  - code: '801140.SI'
+    name: '轻工制造'
+  - code: '801150.SI'
+    name: '医药生物'
+  - code: '801160.SI'
+    name: '公用事业'
+  - code: '801170.SI'
+    name: '交通运输'
+  - code: '801180.SI'
+    name: '房地产'
+  - code: '801200.SI'
+    name: '商业贸易'
+  - code: '801210.SI'
+    name: '休闲服务'
+  - code: '801230.SI'
+    name: '综合'
+  - code: '801710.SI'
+    name: '建筑材料'
+  - code: '801720.SI'
+    name: '建筑装饰'
+  - code: '801730.SI'
+    name: '电气设备'
+  - code: '801740.SI'
+    name: '国防军工'
+  - code: '801750.SI'
+    name: '计算机'
+  - code: '801760.SI'
+    name: '传媒'
+  - code: '801770.SI'
+    name: '通信'
+  - code: '801780.SI'
+    name: '银行'
+  - code: '801790.SI'
+    name: '非银金融'
+  - code: '801880.SI'
+    name: '汽车'
+  - code: '801890.SI'
+    name: '机械设备'
+  - code: '801950.SI'
+    name: '煤炭'
+  - code: '801960.SI'
+    name: '石油石化'
+  - code: '801970.SI'
+    name: '环保'
+
+# ========== 申万二级行业 (104个) ==========
+# 注意: 以下行业代码需要根据实际的iFinD/Wind数据确认
+# 代码格式: 一级行业代码 + 两位数字
+
+shenwan_l2:
+  # 农林牧渔 (801010)
+  - {code: '801011.SI', name: '种植业', parent: '801010.SI'}
+  - {code: '801012.SI', name: '林业', parent: '801010.SI'}
+  - {code: '801013.SI', name: '畜牧业', parent: '801010.SI'}
+  - {code: '801014.SI', name: '渔业', parent: '801010.SI'}
+  - {code: '801015.SI', name: '农产品加工', parent: '801010.SI'}
+  - {code: '801016.SI', name: '农业综合', parent: '801010.SI'}
+
+  # 采掘 (801020)
+  - {code: '801021.SI', name: '煤炭开采', parent: '801020.SI'}
+  - {code: '801022.SI', name: '石油开采', parent: '801020.SI'}
+  - {code: '801023.SI', name: '采掘服务', parent: '801020.SI'}
+  - {code: '801024.SI', name: '其他采掘', parent: '801020.SI'}
+
+  # 化工 (801030)
+  - {code: '801031.SI', name: '基础化学', parent: '801030.SI'}
+  - {code: '801032.SI', name: '化学制品', parent: '801030.SI'}
+  - {code: '801033.SI', name: '化学纤维', parent: '801030.SI'}
+  - {code: '801034.SI', name: '塑料', parent: '801030.SI'}
+  - {code: '801035.SI', name: '橡胶', parent: '801030.SI'}
+  - {code: '801036.SI', name: '化学制药', parent: '801030.SI'}
+
+  # 钢铁 (801040)
+  - {code: '801041.SI', name: '钢铁', parent: '801040.SI'}
+
+  # 有色金属 (801050)
+  - {code: '801051.SI', name: '工业金属', parent: '801050.SI'}
+  - {code: '801052.SI', name: '贵金属', parent: '801050.SI'}
+  - {code: '801053.SI', name: '小金属', parent: '801050.SI'}
+  - {code: '801054.SI', name: '金属新材料', parent: '801050.SI'}
+
+  # 电子 (801080)
+  - {code: '801081.SI', name: '半导体', parent: '801080.SI'}
+  - {code: '801082.SI', name: '元件', parent: '801080.SI'}
+  - {code: '801083.SI', name: '光学光电子', parent: '801080.SI'}
+  - {code: '801084.SI', name: '消费电子', parent: '801080.SI'}
+  - {code: '801085.SI', name: '其他电子', parent: '801080.SI'}
+
+  # 家用电器 (801110)
+  - {code: '801111.SI', name: '白色家电', parent: '801110.SI'}
+  - {code: '801112.SI', name: '黑色家电', parent: '801110.SI'}
+  - {code: '801113.SI', name: '小家电', parent: '801110.SI'}
+  - {code: '801114.SI', name: '照明设备', parent: '801110.SI'}
+
+  # 食品饮料 (801120)
+  - {code: '801121.SI', name: '白酒', parent: '801120.SI'}
+  - {code: '801122.SI', name: '其他酒类', parent: '801120.SI'}
+  - {code: '801123.SI', name: '软饮料', parent: '801120.SI'}
+  - {code: '801124.SI', name: '乳制品', parent: '801120.SI'}
+  - {code: '801125.SI', name: '调味品', parent: '801120.SI'}
+  - {code: '801126.SI', name: '食品加工', parent: '801120.SI'}
+
+  # 纺织服装 (801130)
+  - {code: '801131.SI', name: '纺织制造', parent: '801130.SI'}
+  - {code: '801132.SI', name: '服装家纺', parent: '801130.SI'}
+
+  # 轻工制造 (801140)
+  - {code: '801141.SI', name: '造纸', parent: '801140.SI'}
+  - {code: '801142.SI', name: '包装印刷', parent: '801140.SI'}
+  - {code: '801143.SI', name: '家用轻工', parent: '801140.SI'}
+  - {code: '801144.SI', name: '其他轻工制造', parent: '801140.SI'}
+
+  # 医药生物 (801150)
+  - {code: '801151.SI', name: '化学制药', parent: '801150.SI'}
+  - {code: '801152.SI', name: '中药', parent: '801150.SI'}
+  - {code: '801153.SI', name: '生物制品', parent: '801150.SI'}
+  - {code: '801154.SI', name: '医疗器械', parent: '801150.SI'}
+  - {code: '801155.SI', name: '医疗服务', parent: '801150.SI'}
+  - {code: '801156.SI', name: '医药商业', parent: '801150.SI'}
+
+  # 公用事业 (801160)
+  - {code: '801161.SI', name: '电力', parent: '801160.SI'}
+  - {code: '801162.SI', name: '水务', parent: '801160.SI'}
+  - {code: '801163.SI', name: '燃气', parent: '801160.SI'}
+  - {code: '801164.SI', name: '环保工程及服务', parent: '801160.SI'}
+
+  # 交通运输 (801170)
+  - {code: '801171.SI', name: '港口', parent: '801170.SI'}
+  - {code: '801172.SI', name: '高速公路', parent: '801170.SI'}
+  - {code: '801173.SI', name: '航空运输', parent: '801170.SI'}
+  - {code: '801174.SI', name: '航运', parent: '801170.SI'}
+  - {code: '801175.SI', name: '铁路运输', parent: '801170.SI'}
+  - {code: '801176.SI', name: '物流', parent: '801170.SI'}
+
+  # 房地产 (801180)
+  - {code: '801181.SI', name: '房地产开发', parent: '801180.SI'}
+  - {code: '801182.SI', name: '园区开发', parent: '801180.SI'}
+  - {code: '801183.SI', name: '房地产服务', parent: '801180.SI'}
+
+  # 商业贸易 (801200)
+  - {code: '801201.SI', name: '一般零售', parent: '801200.SI'}
+  - {code: '801202.SI', name: '专业零售', parent: '801200.SI'}
+  - {code: '801203.SI', name: '贸易', parent: '801200.SI'}
+
+  # 休闲服务 (801210)
+  - {code: '801211.SI', name: '景点', parent: '801210.SI'}
+  - {code: '801212.SI', name: '酒店', parent: '801210.SI'}
+  - {code: '801213.SI', name: '旅游综合', parent: '801210.SI'}
+  - {code: '801214.SI', name: '餐饮', parent: '801210.SI'}
+  - {code: '801215.SI', name: '其他休闲服务', parent: '801210.SI'}
+
+  # 综合 (801230)
+  - {code: '801231.SI', name: '综合', parent: '801230.SI'}
+
+  # 建筑材料 (801710)
+  - {code: '801711.SI', name: '水泥制造', parent: '801710.SI'}
+  - {code: '801712.SI', name: '玻璃制造', parent: '801710.SI'}
+  - {code: '801713.SI', name: '其他建材', parent: '801710.SI'}
+
+  # 建筑装饰 (801720)
+  - {code: '801721.SI', name: '房屋建设', parent: '801720.SI'}
+  - {code: '801722.SI', name: '装修装饰', parent: '801720.SI'}
+  - {code: '801723.SI', name: '基础建设', parent: '801720.SI'}
+  - {code: '801724.SI', name: '专业工程', parent: '801720.SI'}
+
+  # 电气设备 (801730)
+  - {code: '801731.SI', name: '电机', parent: '801730.SI'}
+  - {code: '801732.SI', name: '电气自动化设备', parent: '801730.SI'}
+  - {code: '801733.SI', name: '电网设备', parent: '801730.SI'}
+  - {code: '801734.SI', name: '光伏设备', parent: '801730.SI'}
+  - {code: '801735.SI', name: '风电设备', parent: '801730.SI'}
+  - {code: '801736.SI', name: '锂电池', parent: '801730.SI'}
+
+  # 国防军工 (801740)
+  - {code: '801741.SI', name: '航空装备', parent: '801740.SI'}
+  - {code: '801742.SI', name: '航天装备', parent: '801740.SI'}
+  - {code: '801743.SI', name: '地面兵装', parent: '801740.SI'}
+  - {code: '801744.SI', name: '船舶制造', parent: '801740.SI'}
+
+  # 计算机 (801750)
+  - {code: '801751.SI', name: '计算机设备', parent: '801750.SI'}
+  - {code: '801752.SI', name: '计算机应用', parent: '801750.SI'}
+  - {code: '801753.SI', name: 'IT服务', parent: '801750.SI'}
+
+  # 传媒 (801760)
+  - {code: '801761.SI', name: '文化传媒', parent: '801760.SI'}
+  - {code: '801762.SI', name: '游戏', parent: '801760.SI'}
+  - {code: '801763.SI', name: '营销传播', parent: '801760.SI'}
+  - {code: '801764.SI', name: '影视院线', parent: '801760.SI'}
+
+  # 通信 (801770)
+  - {code: '801771.SI', name: '通信设备', parent: '801770.SI'}
+  - {code: '801772.SI', name: '通信服务', parent: '801770.SI'}
+
+  # 银行 (801780)
+  - {code: '801781.SI', name: '国有大行', parent: '801780.SI'}
+  - {code: '801782.SI', name: '股份制银行', parent: '801780.SI'}
+  - {code: '801783.SI', name: '城商行', parent: '801780.SI'}
+  - {code: '801784.SI', name: '农商行', parent: '801780.SI'}
+
+  # 非银金融 (801790)
+  - {code: '801791.SI', name: '证券', parent: '801790.SI'}
+  - {code: '801792.SI', name: '保险', parent: '801790.SI'}
+  - {code: '801793.SI', name: '多元金融', parent: '801790.SI'}
+
+  # 汽车 (801880)
+  - {code: '801881.SI', name: '乘用车', parent: '801880.SI'}
+  - {code: '801882.SI', name: '商用车', parent: '801880.SI'}
+  - {code: '801883.SI', name: '汽车零部件', parent: '801880.SI'}
+  - {code: '801884.SI', name: '汽车服务', parent: '801880.SI'}
+
+  # 机械设备 (801890)
+  - {code: '801891.SI', name: '工程机械', parent: '801890.SI'}
+  - {code: '801892.SI', name: '机床工具', parent: '801890.SI'}
+  - {code: '801893.SI', name: '仪器仪表', parent: '801890.SI'}
+  - {code: '801894.SI', name: '通用设备', parent: '801890.SI'}
+  - {code: '801895.SI', name: '专用设备', parent: '801890.SI'}
+  - {code: '801896.SI', name: '运输设备', parent: '801890.SI'}
+
+  # 煤炭 (801950)
+  - {code: '801951.SI', name: '煤炭开采', parent: '801950.SI'}
+  - {code: '801952.SI', name: '焦炭', parent: '801950.SI'}
+
+  # 石油石化 (801960)
+  - {code: '801961.SI', name: '石油开采', parent: '801960.SI'}
+  - {code: '801962.SI', name: '石油化工', parent: '801960.SI'}
+  - {code: '801963.SI', name: '油服工程', parent: '801960.SI'}
+
+  # 环保 (801970)
+  - {code: '801971.SI', name: '环保工程及服务', parent: '801970.SI'}
+  - {code: '801972.SI', name: '环保设备', parent: '801970.SI'}
+
+# ========== 周期性行业分类 ==========
+cyclical_industries:
+  strong_cyclical:  # 强周期
+    - '801020.SI'  # 采掘
+    - '801030.SI'  # 化工
+    - '801040.SI'  # 钢铁
+    - '801050.SI'  # 有色金属
+    - '801950.SI'  # 煤炭
+    - '801960.SI'  # 石油石化
+    - '801710.SI'  # 建筑材料
+    - '801010.SI'  # 农林牧渔
+
+  medium_cyclical:  # 中周期
+    - '801890.SI'  # 机械设备
+    - '801880.SI'  # 汽车
+    - '801720.SI'  # 建筑装饰
+    - '801180.SI'  # 房地产
+
+  weak_cyclical:  # 弱周期
+    - '801120.SI'  # 食品饮料
+    - '801150.SI'  # 医药生物
+    - '801750.SI'  # 计算机
+    - '801760.SI'  # 传媒
+    - '801770.SI'  # 通信
+
+  non_cyclical:  # 非周期
+    - '801160.SI'  # 公用事业
+    - '801780.SI'  # 银行
+    - '801790.SI'  # 非银金融
+
+# ========== 注意事项 ==========
+# 1. 以上二级行业代码为示例,实际代码需要从iFinD/Wind确认
+# 2. 申万行业分类会定期调整,需要定期更新
+# 3. 部分一级行业可能没有细分二级行业(如钢铁、综合)
+# 4. 使用时需要通过iFinD API获取最新的行业分类和成分股
