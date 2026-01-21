@@ -665,7 +665,11 @@ class IFindAPIClient:
             #     "ths_net_profit_stock;"
             #     "ths_cash_flow_oper_act_stock;"
             #     "ths_roe_stock;"
-            #     "ths_gross_profit_margin_stock"
+            #     "ths_gross_profit_margin_stock;"
+            #     "ths_roic_stock;"               # 新增: ROIC
+            #     "ths_current_ratio_stock;"      # 新增: 流动比率
+            #     "ths_quick_ratio_stock;"        # 新增: 速动比率
+            #     "ths_sq_related_trade_stock"    # 新增: 关联交易(需确认口径)
             # )
             # params = "100;100;100;100;100;100;100;100;100;100;100;100;100"  # 报告期参数
             # result = THS_DP(

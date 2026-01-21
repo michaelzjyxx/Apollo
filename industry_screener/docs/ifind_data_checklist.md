@@ -72,8 +72,13 @@
 | **净利润(TTM)** | `net_profit_ttm` | `ths_net_profit_ttm_stock` | |
 | **经营现金流** | `cash_flow_oper_act` | `ths_cash_flow_oper_act_stock` | |
 | **ROE** | `roe` | `ths_roe_stock` | |
+| **ROIC** | `roic` | `ths_roic_stock` | 🔴 **[新增]** 核心质量指标 |
 | **毛利率** | `gross_margin` | `ths_gross_profit_margin_stock` | |
 | **净利增长率** | `net_profit_growth_rate` | `ths_net_profit_growth_rate_stock` | 同比增长 |
+| **流动比率** | `current_ratio` | `ths_current_ratio_stock` | 🔴 **[新增]** 财务安全 |
+| **速动比率** | `quick_ratio` | `ths_quick_ratio_stock` | 🔴 **[新增]** 财务安全 |
+| **关联交易** | `related_transaction` | `ths_sq_related_trade_stock` | 🔴 **[新增]** 治理风险(需确认字段) |
+
 
 ### 4.3 行情与估值 (Market & Valuation)
 | 指标名称 | 内部字段名 | iFinD字段名 | 说明 |
