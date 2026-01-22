@@ -14,7 +14,7 @@ import pandas as pd
 import requests
 from loguru import logger
 
-from ..utils import IndicatorType, get_config_value
+from ..utils import IndicatorType, SHENWAN_L1_INDUSTRIES, get_config_value
 
 
 class IFindAPIError(Exception):
@@ -200,6 +200,66 @@ class IFindAPIClient:
                 raise e
                 
         return {}
+
+    def _extract_basic_data_value(
+        self,
+        data: Any,
+        indicator: str,
+    ) -> tuple[Optional[Any], Optional[int], Optional[str], bool, bool]:
+        errorcode = data.get("errorcode") if isinstance(data, dict) else None
+        errmsg = data.get("errmsg") if isinstance(data, dict) else None
+        tables = data.get("tables") if isinstance(data, dict) else None
+        table = None
+        if isinstance(tables, list):
+            table = tables[0] if tables else None
+        elif isinstance(tables, dict):
+            table = tables
+        if not (table and isinstance(table, dict) and "table" in table and table["table"]):
+            return None, errorcode, errmsg, False, False
+        table_data = table["table"]
+        if isinstance(table_data, list):
+            row = table_data[0]
+        elif isinstance(table_data, dict):
+            row = table_data
+        else:
+            row = None
+        if not isinstance(row, dict) or indicator not in row:
+            return None, errorcode, errmsg, True, False
+        return row[indicator], errorcode, errmsg, True, True
+
+    def get_basic_data_value(
+        self,
+        code: str,
+        indicator: str,
+        indiparams: Optional[List[str]] = None,
+    ) -> Optional[Any]:
+        self._check_connection()
+
+        if self.api_mode != "http":
+            raise IFindAPIError("仅支持 HTTP 模式获取 basic_data_service")
+
+        def _fetch():
+            payload = {
+                "codes": code,
+                "indipara": [
+                    {
+                        "indicator": indicator,
+                        "indiparams": indiparams or [],
+                    }
+                ],
+            }
+            data = self._http_request("basic_data_service", payload)
+            val, errorcode, errmsg, _, _ = self._extract_basic_data_value(
+                data,
+                indicator,
+            )
+            if val is not None:
+                return val
+            if errorcode not in (None, 0):
+                raise IFindAPIError(f"API Error: {errmsg} ({errorcode})")
+            return None
+
+        return self._retry_request(_fetch)
 
     def _check_connection(self):
         """检查连接状态"""
@@ -413,44 +473,40 @@ class IFindAPIClient:
                 pass
                 
             elif self.api_mode == "http":
-                # HTTP 模式: 使用 basic_data_service 配合 ths_member_stock 指标
-                # 注意: 这种用法可能需要特定的 HTTP 接口支持，或者使用 date_sequence
-                # 通常行业成分股是截面数据，使用 basic_data_service 或 date_sequence 均可
-                # 假设使用 basic_data_service 获取成分股
-                
-                query_date = date.strftime('%Y-%m-%d') if date else datetime.now().strftime('%Y-%m-%d')
-                
-                # 尝试使用 date_sequence，因为 basic_data_service 可能不支持返回列表类型的指标
+                query_date = date.strftime("%Y-%m-%d") if date else datetime.now().strftime("%Y-%m-%d")
+
                 payload = {
                     "codes": industry_code,
-                    "startdate": query_date,
-                    "enddate": query_date,
-                    "functionpara": {
-                        "Interval": "D",
-                        "Fill": "Blank"
-                    },
                     "indipara": [
                         {
                             "indicator": "ths_member_stock",
-                            "indiparams": []
+                            "indiparams": [query_date],
                         }
                     ]
                 }
-                
-                # 注意: ths_member_stock 可能返回的是逗号分隔的字符串或列表
-                data = self._http_request("date_sequence", payload)
-                
-                if "tables" in data and data["tables"]:
-                    table_data = data["tables"][0]
-                    if "table" in table_data:
-                        df = pd.DataFrame(table_data["table"])
-                        if "ths_member_stock" in df.columns and not df.empty:
-                            members_str = df.iloc[0]["ths_member_stock"]
-                            if isinstance(members_str, str):
-                                return members_str.split(";")
-                            elif isinstance(members_str, list):
-                                return members_str
-                
+
+                data = self._http_request("basic_data_service", payload)
+                members, errorcode, errmsg, _, _ = self._extract_basic_data_value(
+                    data,
+                    "ths_member_stock",
+                )
+
+                if members is None:
+                    if errorcode not in (None, 0):
+                        raise IFindAPIError(f"API Error: {errmsg} ({errorcode})")
+                    return []
+
+                if isinstance(members, str):
+                    if ";" in members:
+                        return [item for item in members.split(";") if item]
+                    if "," in members:
+                        return [item for item in members.split(",") if item]
+                    return [members] if members else []
+                if isinstance(members, list):
+                    return members
+                if isinstance(members, dict):
+                    return list(members.values())
+
                 return []
 
             logger.warning(f"iFinD API 实际实现待完成 (SDK模式) - industry_code={industry_code}")
@@ -589,27 +645,52 @@ class IFindAPIClient:
             stock_codes = [stock_codes]
 
         def _fetch_chunk(chunk_codes: List[str]) -> pd.DataFrame:
-            # TODO: 实际实现需要调用 iFinD API
-            # 示例:
-            # indicators = (
-            #     "ths_stock_short_name_stock;"
-            #     "ths_industry_shenwan_l2_stock;"
-            #     "ths_industry_shenwan_l2_name_stock;"
-            #     "ths_ipo_date_stock;"
-            #     "ths_stock_status"
-            # )
-            # result = THS_BD(
-            #     thscode=';'.join(chunk_codes),
-            #     jsonIndicator=indicators,
-            #     jsonparam='',
-            #     begintime=date.strftime('%Y-%m-%d') if date else ''
-            # )
-            
-            logger.warning(
-                f"iFinD API 实际实现待完成 - stock_codes={chunk_codes[:3]}..."
-            )
-            # 返回空DataFrame但包含列名，确保下游不报错
+            if self.api_mode != "http":
+                logger.warning(
+                    f"iFinD API 实际实现待完成 - stock_codes={chunk_codes[:3]}..."
+                )
+                return pd.DataFrame(
+                    columns=[
+                        "stock_code",
+                        "stock_name",
+                        "industry_code",
+                        "industry_name",
+                        "list_date",
+                        "is_st",
+                    ]
+                )
+
+            query_date = date.strftime("%Y-%m-%d") if date else datetime.now().strftime("%Y-%m-%d")
+            l1_name_to_code = {name: code for code, name in SHENWAN_L1_INDUSTRIES.items()}
+
+            rows = []
+            for code in chunk_codes:
+                stock_name = self.get_basic_data_value(code, "ths_stock_short_name_stock")
+                list_date = self.get_basic_data_value(code, "ths_ipo_date_stock")
+                st_status = self.get_basic_data_value(code, "ths_stock_status")
+                l1_name = self.get_basic_data_value(code, "ths_the_sw_industry_stock", ["1", query_date])
+                l2_name = self.get_basic_data_value(code, "ths_the_sw_industry_stock", ["2", query_date])
+
+                if isinstance(l1_name, list):
+                    l1_name = l1_name[0] if l1_name else None
+                if isinstance(l2_name, list):
+                    l2_name = l2_name[0] if l2_name else None
+
+                industry_code = l1_name_to_code.get(l1_name) if l1_name else None
+
+                rows.append(
+                    {
+                        "stock_code": code,
+                        "stock_name": stock_name,
+                        "industry_code": industry_code,
+                        "industry_name": l2_name or l1_name,
+                        "list_date": list_date,
+                        "is_st": st_status,
+                    }
+                )
+
             return pd.DataFrame(
+                rows,
                 columns=[
                     "stock_code",
                     "stock_name",
@@ -617,7 +698,7 @@ class IFindAPIClient:
                     "industry_name",
                     "list_date",
                     "is_st",
-                ]
+                ],
             )
 
         return self._batch_request(stock_codes, _fetch_chunk)

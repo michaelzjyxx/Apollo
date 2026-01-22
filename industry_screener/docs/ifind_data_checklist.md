@@ -1,102 +1,102 @@
 # iFinD 数据指标全量确认清单
 
-本文档列出了系统所需的所有数据字段。请核对状态为 **[待确认]** 的项目，并在 iFinD 终端中查找对应的真实代码填入。
+本文档汇总了所有测试失败或需确认的字段。请在 iFinD 终端的“超级命令”或“代码生成器”中查找对应的真实代码和参数。
 
-## 一、宏观经济指标 (Macro Data)
-**获取方式**: EDB 经济数据库 (通常代码以 `M` 开头)
-
-| 指标名称 | 内部字段名 | 当前代码/占位符 | 状态 | 待确认真实代码 | 说明 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **PMI** | `PMI` | `"pmi"` | 🔴 **[待确认]** | `M_______` | 制造业采购经理指数 |
-| **新订单指数** | `NEW_ORDER` | `"pmi_new_order"` | 🔴 **[待确认]** | `M_______` | 制造业PMI:新订单 |
-| **M2同比** | `M2` | `"m2_yoy"` | 🔴 **[待确认]** | `M_______` | M2供应量同比增长率 |
-| **社融同比** | `SOCIAL_FINANCING` | `"social_financing_yoy"` | 🔴 **[待确认]** | `M_______` | 社会融资规模存量同比 |
-| **PPI同比** | `PPI` | `"ppi_yoy"` | 🔴 **[待确认]** | `M_______` | 工业生产者出厂价格指数(PPI)同比 |
-| **CPI同比** | `CPI` | `"cpi_yoy"` | 🔴 **[待确认]** | `M_______` | 居民消费价格指数(CPI)同比 |
+> **操作指南**:
+> 1. 打开 iFinD 终端 -> 顶部菜单“量化” -> “超级命令” (或“数据接口”)。
+> 2. 选择“HTTP”或“Python”模式。
+> 3. 搜索对应指标（如“净利润”），选择需要的参数（如“单季”、“合并报表”）。
+> 4. 查看生成的代码，将**指标名称**（如 `ths_net_profit_stock`）和**完整参数**（如 `100:REPORT`）填入下表。
 
 ---
 
-## 二、行业级指标 (Industry Data)
-**获取方式**: 申万二级行业指数 (如 `801xxx.SI`) 对应的衍生指标
+## 🔴 第一部分：测试失败的指标 (需修正代码或参数)
 
-| 指标名称 | 内部字段名 | 当前代码/占位符 | 状态 | 待确认真实代码 | 说明 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **行业PE-TTM** | `PE_TTM` | `"pe_ttm"` | 🔴 **[待确认]** | `ths________` | 申万行业指数整体市盈率(TTM) |
-| **行业PB** | `PB` | `"pb"` | 🔴 **[待确认]** | `ths________` | 申万行业指数整体市净率 |
-| **北向资金** | `NORTHBOUND_FLOW` | `"northbound_flow"` | 🔴 **[待确认]** | `ths________` | 陆股通行业资金净流入 |
-| **主力资金** | `MAIN_FUND_FLOW` | `"main_fund_flow"` | 🔴 **[待确认]** | `ths________` | 行业主力资金净流入 |
-| **行业收入增速** | `REVENUE_GROWTH` | `"revenue_yoy"` | 🟡 **[需确认]** | `ths________` | 若无直接指标，需聚合成分股计算 |
-| **行业利润增速** | `PROFIT_GROWTH` | `"profit_yoy"` | 🟡 **[需确认]** | `ths________` | 若无直接指标，需聚合成分股计算 |
+以下指标在代码中使用现有名称测试**失败**（返回空值或报错）。请查找真实可用的代码。
+
+### 1. 基础信息 (Basic Info)
+| 指标说明 | 现有失效代码 | **[请填写] 示例代码** | **[请填写] 代码说明** |
+| :--- | :--- | :--- | :--- |
+| **ST状态** | `ths_stock_status` | `<示例代码待补充>` | `<代码说明待补充>` |
+
+### 2. 核心财务报表 (Financials)
+*注意：财务指标通常需要指定“报表类型”（如单季/累计）和“报表合并类型”。*
+
+| 指标说明 | 现有失效代码 | **[请填写] 示例代码** | **[请填写] 代码说明** |
+| :--- | :--- | :--- | :--- |
+| **净利润** | `ths_net_profit_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_np_stock","indiparams":["20260331","1"]}]}` | ` indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331；第二为报表类型:1 - 合并报表；2 - 母公司报表；3 - 合并报表(调整)；4 - 母公司报表(调整)` |
+| **净利润(TTM)** | `ths_net_profit_ttm_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_np_ttm_stock","indiparams":["2026-01-21","100"]}]}` | `第一个参数：交易日期:日期；第二个参数：TTM基准日:100 - 报表截止日期；101 - 报表公告日期` |
+| **总资产** | `ths_total_assets_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_total_asset_pee_stock","indiparams":["20260331"]}]}` | ` indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331` |
+| **总负债** | `ths_total_liabilities_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_total_liab_stock","indiparams":["20250331","1"]}]}` | `indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331；第二为报表类型:1 - 合并报表；2 - 母公司报表；3 - 合并报表(调整)；4 - 母公司报表(调整)` |
+| **流动资产** | `ths_current_assets_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_total_current_assets_stock","indiparams":["20250331","1"]}]}` | `indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331；第二为报表类型:1 - 合并报表；2 - 母公司报表；3 - 合并报表(调整)；4 - 母公司报表(调整)` |
+| **存货** | `ths_inventory_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_inventory_stock","indiparams":["20250331","1"]}]}` | `indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331；第二为报表类型:1 - 合并报表；2 - 母公司报表；3 - 合并报表(调整)；4 - 母公司报表(调整)` |
+| **净资产(股东权益)** | `ths_net_assets_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_net_asset_pee_stock","indiparams":["8"]}]}` | `indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331` |
+| **商誉** | `ths_goodwill_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_goodwill_stock","indiparams":["20250331","1"]}]}` | `indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331；第二为报表类型:1 - 合并报表；2 - 母公司报表；3 - 合并报表(调整)；4 - 母公司报表(调整)` |
+| **营业收入** | `ths_operating_revenue_stock` | `formData:{"codes":"920000.BJ","indipara":[{"indicator":"ths_revenue_stock","indiparams":["20250331","1"]}]}` | `indiparams 的第一个为报告期，按季度取，所以是只能填每年的四个季度的各自最后一天，如 20250331；第二为报表类型:1 - 合并报表；2 - 母公司报表；3 - 合并报表(调整)；4 - 母公司报表(调整)` |
+| **经营性现金流** | `ths_cash_flow_oper_act_stock` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **毛利率** | `ths_gross_profit_margin_stock` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **净利润增速(同比)**| `ths_net_profit_growth_rate_stock`| `<示例代码待补充>` | `<代码说明待补充>` |
+| **营业成本** | `ths_operating_cost_stock` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **ROE** | `ths_roe_stock` | `<示例代码待补充>` | `<代码说明待补充>` |
+
+### 3. 估值与股东 (Valuation & Shareholders)
+| 指标说明 | 现有失效代码 | **[请填写] 示例代码** | **[请填写] 代码说明** |
+| :--- | :--- | :--- | :--- |
+| **PB (市净率)** | `ths_pb_stock` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **机构持仓比例** | `ths_institutional_ownership_stock`| `<示例代码待补充>` | `<代码说明待补充>` |
+| **大股东质押比例** | `ths_pledge_ratio_stock` | `<示例代码待补充>` | `<代码说明待补充>` |
 
 ---
 
-## 三、复杂计算指标 (Complex Derived Metrics)
-**获取方式**: 需要确认是否有直接指标，否则需通过成分股聚合计算
+## 第二部分：待确认的宏观与行业指标 (从未配置)
 
-| 指标名称 | 内部字段名 | 疑似方案 | 状态 | 确认结果 |
+以下指标目前只有占位符，必须查找 iFinD EDB 或行业指数代码。
+
+### 1. 宏观经济 (EDB 经济数据库)
+*通常以 `M` 开头，如 `M0000545`*
+
+| 指标说明 | 内部占位符 | **[请填写] 示例代码** | **[请填写] 代码说明** |
+| :--- | :--- | :--- | :--- |
+| **PMI (制造业)** | `pmi` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **PMI:新订单** | `pmi_new_order` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **M2 同比增速** | `m2_yoy` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **社融规模存量同比**| `social_financing_yoy` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **PPI 同比** | `ppi_yoy` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **CPI 同比** | `cpi_yoy` | `<示例代码待补充>` | `<代码说明待补充>` |
+
+### 2. 行业衍生数据 (申万二级行业指数)
+*需确认是否有直接的行业指数指标，如 `ths_pe_ttm_index`*
+
+| 指标说明 | 内部占位符 | **[请填写] 是否有直接指标?** | **[请填写] 示例代码** | **[请填写] 代码说明** |
 | :--- | :--- | :--- | :--- | :--- |
-| **行业CR5** | `CR5` | 聚合计算 (营收前5占比) | 🟡 **[需确认]** | □ 确认需聚合 <br>□ 有直接指标: ______ |
-| **龙头份额** | `LEADER_SHARE` | 聚合计算 (最大营收占比) | 🟡 **[需确认]** | □ 确认需聚合 <br>□ 有直接指标: ______ |
-| **价格波动率** | `PRICE_VOLATILITY` | 计算 (行业指数收盘价标准差) | 🟡 **[需确认]** | □ 确认需计算 <br>□ 有直接指标: ______ |
-| **产能利用率** | `CAPACITY_UTILIZATION` | 需寻找宏观/行业数据 | 🔴 **[待确认]** | □ 代码: ______ <br>□ 无法获取 |
-| **行业平均ROE** | `ROE` | 聚合计算 (成分股中位数) | 🟡 **[需确认]** | □ 确认需聚合 <br>□ 有直接指标: ______ |
-| **存货周转** | `INVENTORY_TURNOVER` | 聚合计算 (成分股中位数) | 🟡 **[需确认]** | □ 确认需聚合 <br>□ 有直接指标: ______ |
+| **行业 PE-TTM** | `pe_ttm` | □ 有直接指标 <br>□ 需聚合计算 | `<示例代码待补充>` | `<代码说明待补充>` |
+| **行业 PB** | `pb` | □ 有直接指标 <br>□ 需聚合计算 | `<示例代码待补充>` | `<代码说明待补充>` |
+| **北向资金净流入** | `northbound_flow` | □ 有直接指标 <br>□ 需聚合计算 | `<示例代码待补充>` | `<代码说明待补充>` |
+| **主力资金净流入** | `main_fund_flow` | □ 有直接指标 <br>□ 需聚合计算 | `<示例代码待补充>` | `<代码说明待补充>` |
+| **行业产能利用率** | `capacity_utilization` | □ 有直接指标 <br>□ 无法获取 | `<示例代码待补充>` | `<代码说明待补充>` |
 
 ---
 
-## 四、股票基础数据 (Stock Basic Data)
-**获取方式**: 股票代码 (如 `600519.SH`) 对应的基础指标
-**状态**: ✅ **[已确认]** (基于现有文档映射，请最终核对是否可用)
+## 🟡 第三部分：需确认逻辑的复杂指标
 
-### 4.1 基础信息
-| 指标名称 | 内部字段名 | iFinD字段名 | 说明 |
-| :--- | :--- | :--- | :--- |
-| **股票简称** | `stock_name` | `ths_stock_short_name_stock` | |
-| **申万一级行业** | `industry_code_l1` | `ths_industry_shenwan_l1_stock` | |
-| **申万二级行业** | `industry_code_l2` | `ths_industry_shenwan_l2_stock` | |
-| **上市日期** | `list_date` | `ths_ipo_date_stock` | |
-| **ST状态** | `is_st` | `ths_stock_status` | |
+以下指标建议使用“聚合计算”模式（即拉取成分股后自己在代码里算），如果您能找到直接指标更好。
 
-### 4.2 财务数据 (Financials)
-| 指标名称 | 内部字段名 | iFinD字段名 | 说明 |
-| :--- | :--- | :--- | :--- |
-| **总资产** | `total_assets` | `ths_total_assets_stock` | |
-| **总负债** | `total_liabilities` | `ths_total_liabilities_stock` | |
-| **流动资产** | `current_assets` | `ths_current_assets_stock` | |
-| **存货** | `inventory` | `ths_inventory_stock` | |
-| **净资产** | `net_assets` | `ths_net_assets_stock` | |
-| **商誉** | `goodwill` | `ths_goodwill_stock` | |
-| **营业收入** | `operating_revenue` | `ths_operating_revenue_stock` | |
-| **营业成本** | `operating_cost` | `ths_operating_cost_stock` | |
-| **净利润** | `net_profit` | `ths_net_profit_stock` | |
-| **净利润(TTM)** | `net_profit_ttm` | `ths_net_profit_ttm_stock` | |
-| **经营现金流** | `cash_flow_oper_act` | `ths_cash_flow_oper_act_stock` | |
-| **ROE** | `roe` | `ths_roe_stock` | |
-| **ROIC** | `roic` | `ths_roic_stock` | 🔴 **[新增]** 核心质量指标 |
-| **毛利率** | `gross_margin` | `ths_gross_profit_margin_stock` | |
-| **净利增长率** | `net_profit_growth_rate` | `ths_net_profit_growth_rate_stock` | 同比增长 |
-| **流动比率** | `current_ratio` | `ths_current_ratio_stock` | 🔴 **[新增]** 财务安全 |
-| **速动比率** | `quick_ratio` | `ths_quick_ratio_stock` | 🔴 **[新增]** 财务安全 |
-| **关联交易** | `related_transaction` | `ths_sq_related_trade_stock` | 🔴 **[新增]** 治理风险(需确认字段) |
-
-
-### 4.3 行情与估值 (Market & Valuation)
-| 指标名称 | 内部字段名 | iFinD字段名 | 说明 |
-| :--- | :--- | :--- | :--- |
-| **收盘价** | `close_price` | `ths_close_price_stock` | 前复权? |
-| **总市值** | `market_value` | `ths_market_value_stock` | |
-| **PE(TTM)** | `pe_ttm` | `ths_pe_ttm_stock` | |
-| **PB** | `pb` | `ths_pb_stock` | |
-
-### 4.4 股东数据 (Shareholders)
-| 指标名称 | 内部字段名 | iFinD字段名 | 说明 |
-| :--- | :--- | :--- | :--- |
-| **机构持仓** | `institutional_ownership` | `ths_institutional_ownership_stock` | 需确认计算口径 |
-| **质押比例** | `pledge_ratio` | `ths_pledge_ratio_stock` | 大股东质押比例 |
+| 指标说明 | 建议方案 | **[请填写] 确认结果** | **[请填写] 示例代码** | **[请填写] 代码说明** |
+| :--- | :--- | :--- | :--- | :--- |
+| **行业 CR5** | 聚合计算 | □ 确认聚合 <br>□ 直接指标: `__________` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **行业龙头份额** | 聚合计算 | □ 确认聚合 <br>□ 直接指标: `__________` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **行业平均 ROE** | 聚合计算 | □ 确认聚合 <br>□ 直接指标: `__________` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **存货周转效率** | 聚合计算 | □ 确认聚合 <br>□ 直接指标: `__________` | `<示例代码待补充>` | `<代码说明待补充>` |
+| **行业价格波动率** | 计算标准差 | □ 确认计算 <br>□ 直接指标: `__________` | `<示例代码待补充>` | `<代码说明待补充>` |
 
 ---
 
-## 五、下一步行动
-1.  **宏观/行业指标**: 请在 iFinD 终端搜索上述红色的 `[待确认]` 指标，将真实代码填入表格。
-2.  **聚合逻辑**: 确认是否接受对 CR5、ROE 等使用“成分股聚合”的计算方式（即：如果没有直接的行业指标，我们就拉取所有成分股算平均）。
-3.  **填好后**: 请将更新后的文档内容发回，我们将更新 `src/data/ifind_api.py` 中的映射表。
+## ✅ 第四部分：已测试通过的指标 (无需填写)
+
+以下指标已验证可用，**无需**再次确认：
+*   股票简称 (`ths_stock_short_name_stock`)
+*   上市日期 (`ths_ipo_date_stock`)
+*   收盘价 (`ths_close_price_stock`)
+*   总市值 (`ths_market_value_stock`)
+*   PE-TTM (`ths_pe_ttm_stock`)
+*   申万行业一二级 (`ths_the_sw_industry_stock`，参数：1/2 + 截止日期)
